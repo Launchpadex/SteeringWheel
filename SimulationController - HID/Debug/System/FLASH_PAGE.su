@@ -1,3 +1,0 @@
-../System/FLASH_PAGE.c:81:10:Flash_Read_All_Settings	24	static
-../System/FLASH_PAGE.c:165:10:Flash_Write_Data	32	static
-../System/FLASH_PAGE.c:38:10:Flash_Write_All_Settings	536	static
