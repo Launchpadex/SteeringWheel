@@ -1,0 +1,39 @@
+################################################################################
+# Automatically-generated file. Do not edit!
+# Toolchain: GNU Tools for STM32 (13.3.rel1)
+################################################################################
+
+# Add inputs and outputs from these tool invocations to the build variables 
+C_SRCS += \
+../Application/lvgl/src/libs/expat/xmlparse.c \
+../Application/lvgl/src/libs/expat/xmlrole.c \
+../Application/lvgl/src/libs/expat/xmltok.c \
+../Application/lvgl/src/libs/expat/xmltok_impl.c \
+../Application/lvgl/src/libs/expat/xmltok_ns.c 
+
+OBJS += \
+./Application/lvgl/src/libs/expat/xmlparse.o \
+./Application/lvgl/src/libs/expat/xmlrole.o \
+./Application/lvgl/src/libs/expat/xmltok.o \
+./Application/lvgl/src/libs/expat/xmltok_impl.o \
+./Application/lvgl/src/libs/expat/xmltok_ns.o 
+
+C_DEPS += \
+./Application/lvgl/src/libs/expat/xmlparse.d \
+./Application/lvgl/src/libs/expat/xmlrole.d \
+./Application/lvgl/src/libs/expat/xmltok.d \
+./Application/lvgl/src/libs/expat/xmltok_impl.d \
+./Application/lvgl/src/libs/expat/xmltok_ns.d 
+
+
+# Each subdirectory must supply rules for building sources it contributes
+Application/lvgl/src/libs/expat/%.o Application/lvgl/src/libs/expat/%.su Application/lvgl/src/libs/expat/%.cyclo: ../Application/lvgl/src/libs/expat/%.c Application/lvgl/src/libs/expat/subdir.mk
+	arm-none-eabi-gcc "$<" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32G474xx -c -I../Core/Inc -I../USB_Device/App -I../USB_Device/Target -I../Drivers/STM32G4xx_HAL_Driver/Inc -I../Drivers/STM32G4xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32G4xx/Include -I../Drivers/CMSIS/Include -I"C:/Users/Ziga/Desktop/EDUCATION/STM32Workspace/SimulationController - HID/System/Inc" -I"C:/Users/Ziga/Desktop/EDUCATION/STM32Workspace/SimulationController - HID/Application/lvgl" -I"C:/Users/Ziga/Desktop/EDUCATION/STM32Workspace/SimulationController - HID/Application/ui" -I"C:/Users/Ziga/Desktop/EDUCATION/STM32Workspace/SimulationController - HID/Application" -I"C:/Users/Ziga/Desktop/EDUCATION/STM32Workspace/SimulationController - HID/Application/Display" -Os -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "$@"
+
+clean: clean-Application-2f-lvgl-2f-src-2f-libs-2f-expat
+
+clean-Application-2f-lvgl-2f-src-2f-libs-2f-expat:
+	-$(RM) ./Application/lvgl/src/libs/expat/xmlparse.cyclo ./Application/lvgl/src/libs/expat/xmlparse.d ./Application/lvgl/src/libs/expat/xmlparse.o ./Application/lvgl/src/libs/expat/xmlparse.su ./Application/lvgl/src/libs/expat/xmlrole.cyclo ./Application/lvgl/src/libs/expat/xmlrole.d ./Application/lvgl/src/libs/expat/xmlrole.o ./Application/lvgl/src/libs/expat/xmlrole.su ./Application/lvgl/src/libs/expat/xmltok.cyclo ./Application/lvgl/src/libs/expat/xmltok.d ./Application/lvgl/src/libs/expat/xmltok.o ./Application/lvgl/src/libs/expat/xmltok.su ./Application/lvgl/src/libs/expat/xmltok_impl.cyclo ./Application/lvgl/src/libs/expat/xmltok_impl.d ./Application/lvgl/src/libs/expat/xmltok_impl.o ./Application/lvgl/src/libs/expat/xmltok_impl.su ./Application/lvgl/src/libs/expat/xmltok_ns.cyclo ./Application/lvgl/src/libs/expat/xmltok_ns.d ./Application/lvgl/src/libs/expat/xmltok_ns.o ./Application/lvgl/src/libs/expat/xmltok_ns.su
+
+.PHONY: clean-Application-2f-lvgl-2f-src-2f-libs-2f-expat
+

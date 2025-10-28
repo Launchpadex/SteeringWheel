@@ -1,0 +1,8 @@
+../Application/lvgl/src/draw/../misc/lv_text_private.h:166:20:lv_text_is_marker	0	static
+../Application/lvgl/src/draw/lv_draw_label.c:488:16:hex_char_to_num	0	static
+../Application/lvgl/src/draw/lv_draw_label.c:65:6:lv_draw_label_dsc_init	8	static
+../Application/lvgl/src/draw/lv_draw_label.c:80:23:lv_draw_task_get_label_dsc	0	static
+../Application/lvgl/src/draw/lv_draw_label.c:85:6:lv_draw_glyph_dsc_init	0	static
+../Application/lvgl/src/draw/lv_draw_label.c:90:28:lv_draw_label	24	static
+../Application/lvgl/src/draw/lv_draw_label.c:118:28:lv_draw_character	72	static
+../Application/lvgl/src/draw/lv_draw_label.c:158:6:lv_draw_label_iterate_characters	312	static

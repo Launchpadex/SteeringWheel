@@ -1,0 +1,2 @@
+../Application/lvgl/examples/porting/osal/lv_example_osal.c:63:13:counter_button_event_cb	0	static
+../Application/lvgl/examples/porting/osal/lv_example_osal.c:42:6:lv_example_osal	8	static

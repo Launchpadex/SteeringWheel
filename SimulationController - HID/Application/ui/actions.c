@@ -16,7 +16,7 @@
 extern TIM_HandleTypeDef htim8;
 extern TIM_HandleTypeDef htim4;
 extern TIM_HandleTypeDef htim2;
-//helloworld
+
 int16_t SelectedScreen = 0;
 int slider1_value = 0;
 int slider2_value = 0;

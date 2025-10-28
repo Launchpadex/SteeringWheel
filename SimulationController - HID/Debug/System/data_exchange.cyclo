@@ -1,0 +1,6 @@
+../System/data_exchange.c:11:6:send_command	1
+../System/data_exchange.c:21:6:send_stop_calibration_command	1
+../System/data_exchange.c:22:6:send_start_wheel_calibration_command	1
+../System/data_exchange.c:23:6:send_ffb_on_command	1
+../System/data_exchange.c:24:6:send_ffb_off_command	1
+../System/data_exchange.c:27:6:send_calibration_objects_command	9

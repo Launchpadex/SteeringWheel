@@ -1,0 +1,5 @@
+../Application/lvgl/src/font/lv_binfont_loader.c:170:21:read_bits	32	static
+../Application/lvgl/src/font/lv_binfont_loader.c:201:12:read_label	24	static
+../Application/lvgl/src/font/lv_binfont_loader.c:117:6:lv_binfont_destroy	24	static
+../Application/lvgl/src/font/lv_binfont_loader.c:564:9:load_kern	56	static
+../Application/lvgl/src/font/lv_binfont_loader.c:80:13:lv_binfont_create	144	static

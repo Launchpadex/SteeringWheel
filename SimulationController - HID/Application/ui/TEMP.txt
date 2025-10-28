@@ -1,0 +1,117 @@
+void tick_screen_sensor_status() {
+    // Wheel (obj0)
+    {
+        extern int16_t encoder_value, encoder_min, encoder_max;
+        static int16_t last_min = 0, last_max = 4000;
+
+        // Update range if needed
+        if(encoder_min != last_min || encoder_max != last_max) {
+            lv_bar_set_range(objects.obj0, encoder_min, encoder_max);
+            last_min = encoder_min;
+            last_max = encoder_max;
+        }
+
+        // Update value
+        int32_t cur_val = lv_bar_get_value(objects.obj0);
+        if(encoder_value != cur_val) {
+            tick_value_change_obj = objects.obj0;
+            lv_bar_set_value(objects.obj0, encoder_value, LV_ANIM_ON);
+            tick_value_change_obj = NULL;
+        }
+    }
+
+    // Throttle (obj1)
+    {
+        extern uint32_t throttle, throttle_min, throttle_max;
+        static uint32_t last_min = 2815, last_max = 3455;
+
+        if(throttle_min != last_min || throttle_max != last_max) {
+            lv_bar_set_range(objects.obj1, throttle_min, throttle_max);
+            last_min = throttle_min;
+            last_max = throttle_max;
+        }
+
+        int32_t cur_val = lv_bar_get_value(objects.obj1);
+        if(throttle != cur_val) {
+            tick_value_change_obj = objects.obj1;
+            lv_bar_set_value(objects.obj1, throttle, LV_ANIM_ON);
+            tick_value_change_obj = NULL;
+        }
+    }
+
+    // Brake (obj2)
+    {
+        extern uint32_t brake, brake_min, brake_max;
+        static uint32_t last_min = 1455, last_max = 1990;
+
+        if(brake_min != last_min || brake_max != last_max) {
+            lv_bar_set_range(objects.obj2, brake_min, brake_max);
+            last_min = brake_min;
+            last_max = brake_max;
+        }
+
+        int32_t cur_val = lv_bar_get_value(objects.obj2);
+        if(brake != cur_val) {
+            tick_value_change_obj = objects.obj2;
+            lv_bar_set_value(objects.obj2, brake, LV_ANIM_ON);
+            tick_value_change_obj = NULL;
+        }
+    }
+
+    // Clutch (obj3)
+    {
+        extern uint32_t clutch, clutch_min, clutch_max;
+        static uint32_t last_min = 2350, last_max = 2960;
+
+        if(clutch_min != last_min || clutch_max != last_max) {
+            lv_bar_set_range(objects.obj3, clutch_min, clutch_max);
+            last_min = clutch_min;
+            last_max = clutch_max;
+        }
+
+        int32_t cur_val = lv_bar_get_value(objects.obj3);
+        if(clutch != cur_val) {
+            tick_value_change_obj = objects.obj3;
+            lv_bar_set_value(objects.obj3, clutch, LV_ANIM_OFF);
+            tick_value_change_obj = NULL;
+        }
+    }
+
+    // Joy X (obj4)
+    {
+        extern uint16_t raw_x, raw_x_min, raw_x_max;
+        static uint16_t last_min = 0, last_max = 3200;
+
+        if(raw_x_min != last_min || raw_x_max != last_max) {
+            lv_bar_set_range(objects.obj4, raw_x_min, raw_x_max);
+            last_min = raw_x_min;
+            last_max = raw_x_max;
+        }
+
+        int32_t cur_val = lv_bar_get_value(objects.obj4);
+        if(raw_x != cur_val) {
+            tick_value_change_obj = objects.obj4;
+            lv_bar_set_value(objects.obj4, raw_x, LV_ANIM_OFF);
+            tick_value_change_obj = NULL;
+        }
+    }
+
+    // Joy Y (obj5)
+    {
+        extern uint16_t raw_y, raw_y_min, raw_y_max;
+        static uint16_t last_min = 0, last_max = 3200;
+
+        if(raw_y_min != last_min || raw_y_max != last_max) {
+            lv_bar_set_range(objects.obj5, raw_y_min, raw_y_max);
+            last_min = raw_y_min;
+            last_max = raw_y_max;
+        }
+
+        int32_t cur_val = lv_bar_get_value(objects.obj5);
+        if(raw_y != cur_val) {
+            tick_value_change_obj = objects.obj5;
+            lv_bar_set_value(objects.obj5, raw_y, LV_ANIM_OFF);
+            tick_value_change_obj = NULL;
+        }
+    }
+}
