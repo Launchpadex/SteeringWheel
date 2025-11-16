@@ -1,3 +1,0 @@
-../Application/lvgl/tests/src/test_cases/draw/test_bg_image.c:6:6:setUp	1
-../Application/lvgl/tests/src/test_cases/draw/test_bg_image.c:11:6:tearDown	1
-../Application/lvgl/tests/src/test_cases/draw/test_bg_image.c:17:6:test_func_1	1

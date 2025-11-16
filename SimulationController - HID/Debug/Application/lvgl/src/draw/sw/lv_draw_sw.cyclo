@@ -1,4 +1,0 @@
-../Application/lvgl/src/draw/sw/lv_draw_sw.c:141:16:evaluate	9
-../Application/lvgl/src/draw/sw/lv_draw_sw.c:179:16:dispatch	14
-../Application/lvgl/src/draw/sw/lv_draw_sw.c:71:6:lv_draw_sw_init	1
-../Application/lvgl/src/draw/sw/lv_draw_sw.c:97:6:lv_draw_sw_deinit	1

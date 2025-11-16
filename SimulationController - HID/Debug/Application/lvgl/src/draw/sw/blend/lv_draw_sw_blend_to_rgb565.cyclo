@@ -1,7 +1,0 @@
-../Application/lvgl/src/draw/sw/blend/lv_draw_sw_blend_to_rgb565.c:1094:46:l8_to_rgb565	1
-../Application/lvgl/src/draw/sw/blend/lv_draw_sw_blend_to_rgb565.c:1136:45:get_bit	1
-../Application/lvgl/src/draw/sw/blend/lv_draw_sw_blend_to_rgb565.c:1099:46:lv_color_8_16_mix	3
-../Application/lvgl/src/draw/sw/blend/lv_draw_sw_blend_to_rgb565.c:1117:46:lv_color_24_16_mix	3
-../Application/lvgl/src/draw/sw/blend/lv_draw_sw_blend_to_rgb565.c:867:35:rgb888_image_blend	21
-../Application/lvgl/src/draw/sw/blend/lv_draw_sw_blend_to_rgb565.c:211:28:lv_draw_sw_blend_color_to_rgb565	22
-../Application/lvgl/src/draw/sw/blend/lv_draw_sw_blend_to_rgb565.c:362:28:lv_draw_sw_blend_image_to_rgb565	116
