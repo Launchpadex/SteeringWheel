@@ -1,0 +1,8 @@
+../Application/Display/lvgl_lcd.c:64:6:my_flush_cb	16	static
+../Application/Display/lvgl_lcd.c:86:6:touchpad_read	8	static
+../Application/Display/lvgl_lcd.c:40:6:lcd_init	8	static
+../Application/Display/lvgl_lcd.c:49:6:lvgl_init	16	static
+../Application/Display/lvgl_lcd.c:102:6:convert_frequencies_to_string	32	static
+../Application/Display/lvgl_lcd.c:118:9:get_selector_position_to_frequency	8	static
+../Application/Display/lvgl_lcd.c:123:10:get_selector_position_from_frequency	0	static
+../Application/Display/lvgl_lcd.c:135:6:lvgl_ui_init	8	static

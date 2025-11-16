@@ -1,0 +1,11 @@
+../System/InputCollection.c:167:13:calibration_timer_cb	7
+../System/InputCollection.c:37:6:Set_Sampling_Frequency	1
+../System/InputCollection.c:48:6:Read_Actual_Sampling_Frequency	2
+../System/InputCollection.c:66:6:InitADC	1
+../System/InputCollection.c:74:6:CollectButton_StatesMisko	1
+../System/InputCollection.c:94:6:CollectEncoderValue	1
+../System/InputCollection.c:99:6:CollectAllInputs	1
+../System/InputCollection.c:109:6:MapAxis	4
+../System/InputCollection.c:143:6:Send_to_HID	3
+../System/InputCollection.c:249:6:start_calibration	9
+../System/InputCollection.c:298:6:stop_calibration	3
