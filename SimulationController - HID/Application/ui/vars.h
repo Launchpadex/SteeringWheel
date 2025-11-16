@@ -63,7 +63,8 @@ enum FlowGlobalVariables {
     FLOW_GLOBAL_VARIABLE_FREQUENCIES = 45,
     FLOW_GLOBAL_VARIABLE_SELECTED_FREQUENCY_POSITION = 46,
     FLOW_GLOBAL_VARIABLE_FFB_STATE = 47,
-    FLOW_GLOBAL_VARIABLE_BRIGHTNESS = 48
+    FLOW_GLOBAL_VARIABLE_BRIGHTNESS = 48,
+    FLOW_GLOBAL_VARIABLE_AXIS_MIN_MAX = 49
 };
 
 // Native global variables
@@ -166,6 +167,8 @@ extern bool get_var_ffb_state();
 extern void set_var_ffb_state(bool value);
 extern int32_t get_var_brightness();
 extern void set_var_brightness(int32_t value);
+extern const char *get_var_axis_min_max();
+extern void set_var_axis_min_max(const char *value);
 
 
 #ifdef __cplusplus

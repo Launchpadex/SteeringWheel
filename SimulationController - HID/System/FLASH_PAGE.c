@@ -80,33 +80,32 @@ uint32_t Flash_Write_All_Settings(uint32_t StartAddress, SystemSettings *setting
 
 uint32_t Flash_Read_All_Settings(uint32_t StartAddress, SystemSettings *settings)
 {
-    // Initialize defaults
+    // Initialize with defaults
     memset(settings, 0, sizeof(SystemSettings));
-    settings->num_axes = DEFAULT_NUM_AXES;
-    settings->brightness = DEFAULT_BRIGHTNESS;
-    settings->frequency = DEFAULT_FREQUENCY;
-    settings->ffb = false; // Default for FFB
-    settings->valid = 1;   // Assume valid until proven otherwise
+    settings->num_axes     = MAX_AXES;           // Always use full axis count
+    settings->brightness   = DEFAULT_BRIGHTNESS;
+    settings->frequency    = DEFAULT_FREQUENCY;
+    settings->ffb          = false;
+    settings->valid        = 1;                   // Assume valid unless corrupted
 
     uint32_t addr = StartAddress;
-    uint8_t axes_found = 0;
 
     while (1) {
         uint32_t tlvHeader = *(__IO uint32_t *)addr;
-        if (tlvHeader == 0xFFFFFFFF) break; // End of TLVs (erased flash)
+        if (tlvHeader == 0xFFFFFFFF) break;       // End of data (erased flash)
 
-        uint16_t type = tlvHeader >> 16;
+        uint16_t type   = tlvHeader >> 16;
         uint16_t length = tlvHeader & 0xFFFF;
         addr += 4;
 
         if (length == 0) {
-            addr += 4; // Skip invalid
+            addr += 4;
             continue;
         }
 
         switch (type) {
             case TLV_TYPE_AXIS:
-                if (length == 12 && axes_found < MAX_AXES) {
+                if (length == 12) {
                     uint32_t axis_id = *(__IO uint32_t *)addr;
                     addr += 4;
                     if (axis_id >= 1 && axis_id <= MAX_AXES) {
@@ -114,9 +113,8 @@ uint32_t Flash_Read_All_Settings(uint32_t StartAddress, SystemSettings *settings
                         addr += 4;
                         settings->axis_max[axis_id - 1] = *(__IO int32_t *)addr;
                         addr += 4;
-                        axes_found++;
                     } else {
-                        addr += 8; // Skip invalid ID
+                        addr += 8; // Skip invalid axis_id
                     }
                 } else {
                     addr += length;
@@ -151,15 +149,15 @@ uint32_t Flash_Read_All_Settings(uint32_t StartAddress, SystemSettings *settings
                 break;
 
             default:
-                addr += length; // Skip unknown types
+                addr += length; // Skip unknown
                 break;
         }
     }
 
-    settings->num_axes = axes_found;
-    if (axes_found == 0) settings->valid = 0; // No axes found
+    // Always use MAX_AXES, even if some axes weren't in flash
+    settings->num_axes = MAX_AXES;
 
-    return (settings->valid == 1) ? 0 : 1;
+    return 0; // Success
 }
 
 uint32_t Flash_Write_Data(uint32_t StartAddress, uint64_t *Data, uint16_t numberofdoublewords)

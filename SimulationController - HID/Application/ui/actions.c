@@ -57,6 +57,7 @@ void action_save_settings(lv_event_t * e) {
     Flash_Read_All_Settings(FLASH_PAGE_ADDRESS, &system_settings);
 
     Set_Sampling_Frequency(system_settings.frequency);
+    Set_Brightness(system_settings.brightness);
 
     lv_obj_clear_flag(objects.settings_saved_popup, LV_OBJ_FLAG_HIDDEN);
 
@@ -115,15 +116,21 @@ void action_switch_to_calibration(lv_event_t * e){
 #pragma region Calibration
 void action_start_calibration(lv_event_t *e) {
 	start_calibration();
+	loadScreen(SCREEN_ID_CALIBRATION_INDICATION);
+	SelectedScreen = 6;
 }
 
 void action_stop_calibration(lv_event_t *e) {
 	//resets checkboxes
 	stop_calibration();
+	Flash_Write_All_Settings(FLASH_PAGE_ADDRESS, &system_settings);
 	set_var_wheel_calib(false);
 	set_var_pedals_calib(false);
 	set_var_l_joy_calib(false);
 	set_var_misko_joy_calib(false);
+
+	loadScreen(SCREEN_ID_CALIBRATION);
+	SelectedScreen = 5;
 
 	set_var_calibration_status("Calibration stopped");
 }

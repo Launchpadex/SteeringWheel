@@ -4,7 +4,7 @@
 #include "FLASH_PAGE.h"
 
 // Default values
-#define DEFAULT_NUM_AXES     8
+#define DEFAULT_NUM_AXES     9
 #define DEFAULT_AXIS_MIN     0
 #define DEFAULT_AXIS_MAX     4096
 #define DEFAULT_BRIGHTNESS   50

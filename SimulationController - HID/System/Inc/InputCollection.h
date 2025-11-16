@@ -28,6 +28,7 @@ extern uint16_t adc1_values[ADC1_BUFFERSIZE]; // Throttle, Brake, Clutch
 extern uint16_t adc2_values[ADC2_BUFFERSIZE]; // Left-Hand X, Y
 extern uint16_t adc4_values[ADC4_BUFFERSIZE]; // Misko X, Y
 
+extern uint16_t mapped_values[MAX_AXES];
 extern char sampling_frequency_str[32];
 
 // Function prototypes
@@ -40,5 +41,6 @@ void Read_Actual_Sampling_Frequency(uint32_t cycle_count_delta, char* output_str
 void CalibrateAxis(const uint32_t* axis_ids, size_t num_axes);
 void start_calibration(void);
 void stop_calibration(void);
-
+void MapAxis(uint16_t* output_mapped_values);
+void Send_to_HID(void);
 #endif /* INPUT_COLLECTION_H */

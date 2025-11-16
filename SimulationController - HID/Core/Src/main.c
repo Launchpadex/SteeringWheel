@@ -20,6 +20,7 @@
 #include "main.h"
 #include "adc.h"
 #include "dma.h"
+#include "quadspi.h"
 #include "spi.h"
 #include "tim.h"
 #include "usb_device.h"
@@ -29,7 +30,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "InputCollection.h"
-#include "usbd_cdc_if.h"
 #include "ili9341.h"
 #include "ui.h"
 #include "misko_touch.h"
@@ -53,6 +53,7 @@
 /* USER CODE BEGIN PM */
 SystemSettings system_settings;
 uint32_t cycle_count_delta;
+
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -76,9 +77,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         cycle_count_delta = current_cycles - prev_cycles;  // Cycles since last TIM2 interrupt
         prev_cycles = current_cycles;  // Update for next interrupt
         CollectAllInputs();
-        //MapAxisData();
+        Send_to_HID();
     }
-    if (htim == &htim3)  // lvgl Refresh Timer (5ms)
+    if (htim == &htim3)  // lvgl Refresh Timer (2.5ms)
     {
         lv_timer_handler();
         if (SelectedScreen == 1)
@@ -99,6 +100,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		}
         else if (SelectedScreen == 5){
         	tick_screen_calibration();
+        }
+        else if (SelectedScreen == 6){
+        	tick_screen_calibration_indication();
         }
     }
 }
@@ -154,7 +158,14 @@ int main(void)
   MX_TIM8_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
+  MX_QUADSPI1_Init();
   /* USER CODE BEGIN 2 */
+
+  HAL_Delay(100);
+  /* Initialize QSPI */
+
+  if (CSP_QUADSPI_Init() != HAL_OK) Error_Handler();
+  if (CSP_QSPI_EnableMemoryMappedMode() != HAL_OK) Error_Handler();
 
   //Get User Settings
   Flash_Read_All_Settings(FLASH_PAGE_ADDRESS, &system_settings);
@@ -179,6 +190,7 @@ int main(void)
   Flash_Read_All_Settings(FLASH_PAGE_ADDRESS, &system_settings);
 
   Set_Sampling_Frequency(system_settings.frequency);
+  Set_Brightness(system_settings.brightness);
   HAL_TIM_Base_Start_IT(&htim2);	//Input Sampling
   HAL_TIM_Base_Start_IT(&htim3);	//lv_timer_handler() every 5ms
 

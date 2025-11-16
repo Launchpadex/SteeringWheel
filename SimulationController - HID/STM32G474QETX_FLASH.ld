@@ -46,6 +46,7 @@ MEMORY
 {
     FLASH (rx)    : ORIGIN = 0x08000000, LENGTH = 512K
     RAM (xrw)     : ORIGIN = 0x20000000, LENGTH = 128K
+    QSPI_FLASH (r): ORIGIN = 0x90000000, LENGTH = 16M
 }
 
 /* Sections */
@@ -182,6 +183,11 @@ SECTIONS
     libm.a ( * )
     libgcc.a ( * )
   }
-
+  
+  .extflashSection :
+  {
+    *(.extflash*)
+  } > QSPI_FLASH
+  
   .ARM.attributes 0 : { *(.ARM.attributes) }
 }

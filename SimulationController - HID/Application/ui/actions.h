@@ -18,7 +18,6 @@ extern int8_t FS25_Switch_States[4];
 extern int Screen_Brightness;
 
 extern void Set_Brightness(uint8_t brightness);
-
 extern void action_switch_to_sensor_status(lv_event_t * e);
 extern void action_switch_to_main_screen(lv_event_t * e);
 extern void action_switch_to_select_game(lv_event_t * e);

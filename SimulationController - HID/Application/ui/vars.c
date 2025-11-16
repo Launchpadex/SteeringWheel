@@ -9,6 +9,7 @@ static char calibration_status[30] = {0};
 static char force_feedback_status[100] = { 0 };
 char real_samling_frequency_hz[100] = { 0 };
 char frequencies[100] = { 0 };
+char axis_min_max[250] = { 0 };
 int32_t selected_frequency_position;
 bool ffb_state;
 int32_t brightness;
@@ -141,6 +142,20 @@ const char *get_var_calibration_status() {
     return calibration_status;
 }
 #pragma endregion
+
+#pragma region Calibration_Indication
+
+const char *get_var_axis_min_max() {
+    return axis_min_max;
+}
+
+void set_var_axis_min_max(const char *value) {
+    strncpy(axis_min_max, value, sizeof(axis_min_max) / sizeof(char));
+    axis_min_max[sizeof(axis_min_max) / sizeof(char) - 1] = 0;
+}
+
+#pragma endregion
+
 
 #pragma region Settings
 void set_var_force_feedback_status(const char *value) {

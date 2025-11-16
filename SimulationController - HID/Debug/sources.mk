@@ -258,10 +258,11 @@ Application/lvgl/tests/test_images/stride_align64/RLE \
 Application/lvgl/tests/test_images/stride_align64/UNCOMPRESSED \
 Application/lvgl/tests/unity \
 Application/ui \
+Application/ui/images \
 Core/Src \
 Core/Startup \
 Drivers/STM32G4xx_HAL_Driver/Src \
-Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src \
+Middlewares/ST/STM32_USB_Device_Library/Class/CustomHID/Src \
 Middlewares/ST/STM32_USB_Device_Library/Core/Src \
 System \
 USB_Device/App \
