@@ -139,4 +139,8 @@ void lvgl_ui_init(){
 	set_var_ffb_state(system_settings.ffb);
 	set_var_force_feedback_status(system_settings.ffb ? "1" : "0");
 	set_var_brightness(system_settings.brightness);
+	set_var_deadzone(system_settings.deadzone);
+	char temp[16];
+	snprintf(temp, sizeof(temp), "%d", deadzone);
+	set_var_deadzone_char(temp);
 }

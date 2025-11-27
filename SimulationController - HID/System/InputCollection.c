@@ -1,311 +1,263 @@
-#include <stdio.h>
-#include <string.h>
-#include "inputCollection.h"
+/*=====================================================================
+  InputCollection.c – Final clean version (2025)
+=====================================================================*/
+
+#include "InputCollection.h"
 #include "FLASH_PAGE.h"
 #include "SaveUserData.h"
-#include "main.h"
 #include "usbd_custom_hid_if.h"
 
-// Define variables
-int16_t Button_States[NUMBER_OF_BUTTONS];
-uint16_t Encoder_Value;
-
-// Define global variables
-static CalibrationState calib_state;
-
-// handles
-extern TIM_HandleTypeDef htim4;
-extern TIM_HandleTypeDef htim2;
-extern ADC_HandleTypeDef hadc1;
-extern ADC_HandleTypeDef hadc2;
-extern ADC_HandleTypeDef hadc4;
-
+extern TIM_HandleTypeDef htim2, htim4;
+extern ADC_HandleTypeDef hadc1, hadc2, hadc4;
+extern USBD_HandleTypeDef hUsbDeviceFS;
 extern SystemSettings system_settings;
 
-extern USBD_HandleTypeDef hUsbDeviceFS;
+/* DMA buffers – private to this file */
+static uint16_t adc1_values[ADC1_BUFFERSIZE];
+static uint16_t adc2_values[ADC2_BUFFERSIZE];
+static uint16_t adc4_values[ADC4_BUFFERSIZE];
 
-// DMA buffers
-uint16_t adc1_values[ADC1_BUFFERSIZE]; // Throttle, Brake, Clutch
-uint16_t adc2_values[ADC2_BUFFERSIZE]; // Left-Hand X, Y, Slider
-uint16_t adc4_values[ADC4_BUFFERSIZE]; // Misko X, Y
+/* Global */
+static CalibrationState g_calibration = {0};
+static RawInputs g_latest_inputs = {0};
+racing_report_t rep = {};
 
-uint16_t mapped_values[MAX_AXES];
-
-char sampling_frequency_str[32];
-
-// Sampling frequency
-void Set_Sampling_Frequency(int32_t frequency_hz) {
-    if (frequency_hz < 10) {
-        frequency_hz = 10;
-    } else if (frequency_hz > 1000) {
-        frequency_hz = 1000;
-    }
-    int32_t arr = (100000 / frequency_hz) - 1;
-    __HAL_TIM_SET_AUTORELOAD(&htim2, arr);
-}
-
-
-void Read_Actual_Sampling_Frequency(uint32_t cycle_count_delta, char* output_str, size_t str_size) {
-    static const uint32_t CPU_FREQ_HZ = 170000000; // CPU frequency (170 MHz)
-    int real_sampling_frequency_hz; // Changed to int
-
-    if (cycle_count_delta != 0) // Prevent division by zero
-    {
-        real_sampling_frequency_hz = CPU_FREQ_HZ / cycle_count_delta; // Integer division
-    }
-    else
-    {
-        real_sampling_frequency_hz = 0; // Handle edge case
-    }
-
-    // Convert int to string
-    snprintf(output_str, str_size, "%d Hz", real_sampling_frequency_hz); // Format as integer
-}
-
-// Initialize ADCs
-void InitADC(void) {
-  // Calibrate ADCs
-  HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
-  HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
-  HAL_ADCEx_Calibration_Start(&hadc4, ADC_SINGLE_ENDED);
-}
-
-// Collect button states
-void CollectButton_StatesMisko(int16_t states[]) {
-  states[0] = !HAL_GPIO_ReadPin(MiskoJOY_BTN_GPIO_Port, MiskoJOY_BTN_Pin);
-  states[1] = !HAL_GPIO_ReadPin(BTN_ESC_GPIO_Port, BTN_ESC_Pin);
-  states[2] = !HAL_GPIO_ReadPin(BTN_OK_GPIO_Port, BTN_OK_Pin);
-  states[3] = !HAL_GPIO_ReadPin(BTN_UP_GPIO_Port, BTN_UP_Pin);
-  states[4] = !HAL_GPIO_ReadPin(BTN_LEFT_GPIO_Port, BTN_LEFT_Pin);
-  states[5] = !HAL_GPIO_ReadPin(BTN_RIGHT_GPIO_Port, BTN_RIGHT_Pin);
-  states[6] = !HAL_GPIO_ReadPin(BTN_DOWN_GPIO_Port, BTN_DOWN_Pin);
-  states[7] = !HAL_GPIO_ReadPin(LEFT_HAND_JOY_BTN1_GPIO_Port, LEFT_HAND_JOY_BTN1_Pin);
-  states[8] = !HAL_GPIO_ReadPin(LEFT_HAND_JOY_BTN2_GPIO_Port, LEFT_HAND_JOY_BTN2_Pin);
-  states[9] = !HAL_GPIO_ReadPin(BASE_BTN1_GPIO_Port, BASE_BTN1_Pin);
-  states[10] = !HAL_GPIO_ReadPin(BASE_BTN2_GPIO_Port, BASE_BTN2_Pin);
-  states[11] = !HAL_GPIO_ReadPin(BASE_BTN3_GPIO_Port, BASE_BTN3_Pin);
-  states[12] = !HAL_GPIO_ReadPin(BASE_BTN4_GPIO_Port, BASE_BTN4_Pin);
-  states[13] = !HAL_GPIO_ReadPin(WHEEL_GEAR_L_GPIO_Port, WHEEL_GEAR_L_Pin);
-  states[14] = !HAL_GPIO_ReadPin(WHEEL_GEAR_R_GPIO_Port, WHEEL_GEAR_R_Pin);
-
-}
-
-// Collect encoder value
-void CollectEncoderValue(uint16_t *encoder_value) {
-  *encoder_value = (uint16_t)__HAL_TIM_GET_COUNTER(&htim4);
-}
-
-// Collect all inputs
-void CollectAllInputs(void) {
-  // Collect button states
-  CollectButton_StatesMisko(Button_States);
-
-  // Collect encoder value
-  CollectEncoderValue(&Encoder_Value);
-}
-
-
-//Function that maps values to 16bit value
-void MapAxis(uint16_t* output_mapped_values){
-    uint16_t all_axis_values[MAX_AXES];
-
-    // Axis 0: Encoder (wheel)
-    all_axis_values[0] = Encoder_Value;
-
-    // Copy ADC buffers (assuming they are up-to-date)
-    memcpy(all_axis_values + 1, adc1_values, ADC1_BUFFERSIZE * sizeof(uint16_t));
-    memcpy(all_axis_values + 1 + ADC1_BUFFERSIZE, adc2_values, ADC2_BUFFERSIZE * sizeof(uint16_t));
-    memcpy(all_axis_values + 1 + ADC1_BUFFERSIZE + ADC2_BUFFERSIZE, adc4_values, ADC4_BUFFERSIZE * sizeof(uint16_t));
-
-    for(size_t i = 0; i < MAX_AXES; i++){
-    	uint16_t raw = all_axis_values[i];
-    	uint16_t min_val = system_settings.axis_min[i];
-    	uint16_t max_val = system_settings.axis_max[i];
-
-    	if(raw <= min_val){
-    		output_mapped_values[i] = 0;
-    	}
-    	else if(raw >= max_val){
-    		output_mapped_values[i] = UINT16_MAX;
-    	}
-    	else {
-    		uint16_t range = max_val - min_val;
-    		if(range == 0){
-    			output_mapped_values[i] = 0;
-    		}
-    		uint32_t numerator = (raw - min_val) * UINT16_MAX;
-    		output_mapped_values[i] = numerator / range;
-    	}
-    }
-}
-
-
-void Send_to_HID(void)
+/*=====================================================================*/
+void Inputs_Init(void)
 {
-    // 1. Map raw values to 0..65535
-    MapAxis(mapped_values);
+    HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
+    HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
+    HAL_ADCEx_Calibration_Start(&hadc4, ADC_SINGLE_ENDED);
 
-    // 2. Build 1-byte-per-button + 2-byte-per-axis report
-    uint8_t report[NUMBER_OF_BUTTONS + MAX_AXES*2] = {0};
+    HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc1_values, ADC1_BUFFERSIZE);
+    HAL_ADC_Start_DMA(&hadc2, (uint32_t*)adc2_values, ADC2_BUFFERSIZE);
+    HAL_ADC_Start_DMA(&hadc4, (uint32_t*)adc4_values, ADC4_BUFFERSIZE);
+}
 
-    // Pack buttons (1 byte each, 0=off, 1=on)
-    for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
-        report[i] = Button_States[i] ? 1 : 0;
+/*=====================================================================*/
+void Inputs_CollectAll(RawInputs *out)
+{
+    if (!out) return;
 
-    // Pack axes (little-endian 16-bit)
-    for (int i = 0; i < MAX_AXES; i++) {
-        report[NUMBER_OF_BUTTONS + i*2 + 0] = mapped_values[i] & 0xFF;
-        report[NUMBER_OF_BUTTONS + i*2 + 1] = mapped_values[i] >> 8;
+    RawInputs temp = {0}; // Initialize all to zero
+
+    // Map buttons with explicit bit positions
+    temp.buttons = 0;
+    temp.buttons |= (!HAL_GPIO_ReadPin(MiskoJOY_BTN_GPIO_Port,      MiskoJOY_BTN_Pin))      ? (1UL << 0) : 0;
+    temp.buttons |= (!HAL_GPIO_ReadPin(BTN_ESC_GPIO_Port,           BTN_ESC_Pin))           ? (1UL << 1) : 0;
+    temp.buttons |= (!HAL_GPIO_ReadPin(BTN_OK_GPIO_Port,            BTN_OK_Pin))            ? (1UL << 2) : 0;
+    temp.buttons |= (!HAL_GPIO_ReadPin(BTN_UP_GPIO_Port,            BTN_UP_Pin))            ? (1UL << 3) : 0;
+    temp.buttons |= (!HAL_GPIO_ReadPin(BTN_LEFT_GPIO_Port,          BTN_LEFT_Pin))          ? (1UL << 4) : 0;
+    temp.buttons |= (!HAL_GPIO_ReadPin(BTN_RIGHT_GPIO_Port,         BTN_RIGHT_Pin))         ? (1UL << 5) : 0;
+    temp.buttons |= (!HAL_GPIO_ReadPin(BTN_DOWN_GPIO_Port,          BTN_DOWN_Pin))          ? (1UL << 6) : 0;
+    temp.buttons |= (!HAL_GPIO_ReadPin(LEFT_HAND_JOY_BTN1_GPIO_Port,LEFT_HAND_JOY_BTN1_Pin))? (1UL << 7) : 0;
+    temp.buttons |= (!HAL_GPIO_ReadPin(LEFT_HAND_JOY_BTN2_GPIO_Port,LEFT_HAND_JOY_BTN2_Pin))? (1UL << 8) : 0;
+    temp.buttons |= (!HAL_GPIO_ReadPin(BASE_BTN1_GPIO_Port,         BASE_BTN1_Pin))         ? (1UL << 9) : 0;
+    temp.buttons |= (!HAL_GPIO_ReadPin(BASE_BTN2_GPIO_Port,         BASE_BTN2_Pin))         ? (1UL << 10) : 0;
+    temp.buttons |= (!HAL_GPIO_ReadPin(BASE_BTN3_GPIO_Port,         BASE_BTN3_Pin))         ? (1UL << 11) : 0;
+    temp.buttons |= (!HAL_GPIO_ReadPin(BASE_BTN4_GPIO_Port,         BASE_BTN4_Pin))         ? (1UL << 12) : 0;
+    temp.buttons |= (!HAL_GPIO_ReadPin(WHEEL_GEAR_L_GPIO_Port,      WHEEL_GEAR_L_Pin))      ? (1UL << 13) : 0;
+    temp.buttons |= (!HAL_GPIO_ReadPin(WHEEL_GEAR_R_GPIO_Port,      WHEEL_GEAR_R_Pin))      ? (1UL << 14) : 0;
+
+    // Read analog values
+    temp.wheel = (uint16_t)__HAL_TIM_GET_COUNTER(&htim4);
+    temp.throttle   = adc1_values[0];
+    temp.brake      = adc1_values[1];
+    temp.clutch     = adc1_values[2];
+    temp.lh_x       = adc2_values[0];
+    temp.lh_y       = adc2_values[1];
+    temp.lh_slider  = adc2_values[2];
+    temp.misko_x    = adc4_values[0];
+    temp.misko_y    = adc4_values[1];
+
+    *out = temp;
+    g_latest_inputs = temp;
+}
+
+const RawInputs* Inputs_GetLatestSnapshot(void)
+{
+    return &g_latest_inputs;
+}
+
+/*=====================================================================*/
+void Inputs_MapAxes(const RawInputs *raw, MappedAxes *mapped)
+{
+    if (!raw || !mapped)
+        return;
+
+    const uint16_t r[MAX_AXES] = {
+        raw->wheel,
+        raw->throttle,
+        raw->brake,
+        raw->clutch,
+        raw->lh_x,
+        raw->lh_y,
+        raw->lh_slider,
+        raw->misko_x,
+        raw->misko_y
+    };
+
+    for (int i = 0; i < MAX_AXES; ++i)
+    {
+        uint32_t raw_val = r[i];
+        uint32_t min = (uint32_t)system_settings.axis_min[i];
+        uint32_t max = (uint32_t)system_settings.axis_max[i];
+        uint32_t range = max - min;
+
+        int32_t output;  // can stay signed for storage compatibility
+
+        if (raw_val <= min)
+        {
+            output = 0;
+        }
+        else if (raw_val >= max)
+        {
+            output = 32767;
+        }
+        else if (range == 0)
+        {
+            output = 0;  // safety – invalid calibration
+        }
+        else
+        {
+
+            uint64_t temp = (uint64_t)(raw_val - min) * 32768ULL;
+            temp /= range;                 // now in 0 … 32768
+
+            output = (int32_t)temp;
+        }
+        if ((uint16_t)output <= (system_settings.deadzone / 2)){
+        	output = 0;
+        }
+        mapped->values[i] = (uint16_t)output;
     }
+}
+/*=====================================================================*/
 
-    // 3. Send (replace with your HID send function)
-    USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, report, sizeof(report));
+
+void Inputs_BuildAndSendReport(const MappedAxes *mapped, uint16_t button_mask_16bit)
+{
+
+	rep.report_id = (uint8_t)1;
+
+    rep.steering = (uint16_t)mapped->values[AXIS_WHEEL];
+    rep.throttle = (uint16_t)mapped->values[AXIS_THROTTLE];
+    rep.brake    = (uint16_t)mapped->values[AXIS_BRAKE];
+    rep.clutch   = (uint16_t)mapped->values[AXIS_CLUTCH];
+    rep.x_axis   = (uint16_t)mapped->values[AXIS_LH_X];
+    rep.y_axis   = (uint16_t)mapped->values[AXIS_LH_Y];
+    rep.slider   = (uint16_t)mapped->values[AXIS_LH_SLIDER];
+
+    rep.buttons = button_mask_16bit;
+
+    USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, (uint8_t*)&rep, sizeof(rep));
 }
 
 
-// Timer callback for calibration - runs continuously until stopped
-static void calibration_timer_cb(lv_timer_t *timer) {
-    CalibrationState *state = (CalibrationState *)lv_timer_get_user_data(timer);
-    char min_max_values[250];
+/*=====================================================================
+   CALIBRATION – now type-safe and saves to flash
+=====================================================================*/
+static void calibration_timer_cb(lv_timer_t *t)
+{
+    CalibrationState *st = (CalibrationState*)lv_timer_get_user_data(t);
 
-    // Stop if calibration was canceled
-    if (!state->is_calibrating) {
-        set_var_calibration_status("Calibration stopped");
-        lv_timer_del(state->timer);
-        state->timer = NULL;
-        state->current_axis_index = 0;
+    if (!st->is_calibrating) {
+        lv_timer_del(t);
+        st->timer = NULL;
+        set_var_calibration_status("Cancelled");
         return;
     }
 
-    // Only proceed if we have axes to calibrate
-    if (state->num_axes == 0) {
-        set_var_calibration_status("No axes selected");
-        state->is_calibrating = false;
-        lv_timer_del(state->timer);
-        state->timer = NULL;
-        return;
+    RawInputs raw;
+    Inputs_CollectAll(&raw);
+
+    const uint16_t v[MAX_AXES] = {
+        raw.wheel, raw.throttle, raw.brake, raw.clutch,
+        raw.lh_x, raw.lh_y, raw.lh_slider,
+        raw.misko_x, raw.misko_y
+    };
+
+    char buf[400] = "Live values:\n";
+    for (size_t i = 0; i < st->num_axes; i++) {
+        uint32_t axis = st->axes_to_calibrate[i];
+        uint16_t val = v[axis];
+
+        if (val < (uint16_t)system_settings.axis_min[axis])
+            system_settings.axis_min[axis] = val;
+        if (val > (uint16_t)system_settings.axis_max[axis])
+            system_settings.axis_max[axis] = val;
+
+        char line[64];
+        snprintf(line, sizeof(line), "A%d: %5d - %5d\n",
+                 (int)axis, system_settings.axis_min[axis], system_settings.axis_max[axis]);
+        strncat(buf, line, sizeof(buf)-strlen(buf)-1);
     }
 
-    // === STEP 1: Build fresh all_axis_values array from current ADC/encoder readings ===
-    uint16_t all_axis_values[MAX_AXES];
-
-    // Axis 0: Encoder (wheel)
-    all_axis_values[0] = Encoder_Value;
-
-    // Copy ADC buffers (assuming they are up-to-date)
-    memcpy(all_axis_values + 1, adc1_values, ADC1_BUFFERSIZE * sizeof(uint16_t));
-    memcpy(all_axis_values + 1 + ADC1_BUFFERSIZE, adc2_values, ADC2_BUFFERSIZE * sizeof(uint16_t));
-    memcpy(all_axis_values + 1 + ADC1_BUFFERSIZE + ADC2_BUFFERSIZE, adc4_values, ADC4_BUFFERSIZE * sizeof(uint16_t));
-
-    // === STEP 2: Update min/max for ALL axes to calibrate (in a loop) ===
-    for (size_t i = 0; i < state->num_axes; i++) {
-        uint32_t axis_id = state->axes_to_calibrate[i];
-
-        if (axis_id >= MAX_AXES) continue;
-
-        uint16_t current_value = all_axis_values[axis_id];
-
-        // Initialize min/max on first run for this axis
-        //if (state->current_axis_index == 0 && i == 0) {  // First tick ever
-        //    system_settings.axis_min[axis_id] = current_value;
-        //    system_settings.axis_max[axis_id] = current_value;
-        //}
-
-        // Update min/max
-        if (current_value < system_settings.axis_min[axis_id]) {
-            system_settings.axis_min[axis_id] = current_value;
-        }
-        if (current_value > system_settings.axis_max[axis_id]) {
-            system_settings.axis_max[axis_id] = current_value;
-        }
-
-        // min and max textbox display
-        char line[100];
-                snprintf(line, sizeof(line),
-                         "axis %lu: %ld, %ld\n",
-                         (unsigned long)(axis_id),
-                         (long)system_settings.axis_min[axis_id],
-                         (long)system_settings.axis_max[axis_id]);
-
-                strncat(min_max_values, line,
-                        sizeof(min_max_values) - strlen(min_max_values) - 1);
-    }
-
-    // === STEP 3: Update UI (optional: show progress or live values) ===
-    static uint32_t tick_count = 0;
-    tick_count++;
-
+    static uint32_t cnt = 0;
     char status[64];
-    snprintf(status, sizeof(status), "Calibrating... (%lu samples)", (unsigned long)tick_count);
+    snprintf(status, sizeof(status), "Calibrating… %lu samples", ++cnt);
     set_var_calibration_status(status);
-
-    set_var_axis_min_max(min_max_values);
-
-
-    // Reset index (we now loop forever)
-    //state->current_axis_index = 0;
+    set_var_axis_min_max(buf);
 }
 
-void start_calibration(void) {
-    if (calib_state.is_calibrating) {
-        set_var_calibration_status("Calibration already in progress");
+void Inputs_StartCalibration(void)
+{
+    if (g_calibration.is_calibrating) {
+        set_var_calibration_status("Already running!");
         return;
     }
 
-    calib_state.num_axes = 0;
-    calib_state.current_axis_index = 0;
-    calib_state.is_calibrating = true;
+    memset(&g_calibration, 0, sizeof(g_calibration));
+    g_calibration.is_calibrating = true;
 
-    // === Collect axes ===
-    if (get_var_wheel_calib()) {
-        calib_state.axes_to_calibrate[calib_state.num_axes++] = 0;
-    }
+    if (get_var_wheel_calib())   g_calibration.axes_to_calibrate[g_calibration.num_axes++] = AXIS_WHEEL;
     if (get_var_pedals_calib()) {
-        calib_state.axes_to_calibrate[calib_state.num_axes++] = 1;
-        calib_state.axes_to_calibrate[calib_state.num_axes++] = 2;
-        calib_state.axes_to_calibrate[calib_state.num_axes++] = 3;
+        g_calibration.axes_to_calibrate[g_calibration.num_axes++] = AXIS_THROTTLE;
+        g_calibration.axes_to_calibrate[g_calibration.num_axes++] = AXIS_BRAKE;
+        g_calibration.axes_to_calibrate[g_calibration.num_axes++] = AXIS_CLUTCH;
     }
     if (get_var_l_joy_calib()) {
-        calib_state.axes_to_calibrate[calib_state.num_axes++] = 4;
-        calib_state.axes_to_calibrate[calib_state.num_axes++] = 5;
-        calib_state.axes_to_calibrate[calib_state.num_axes++] = 6;
+        g_calibration.axes_to_calibrate[g_calibration.num_axes++] = AXIS_LH_X;
+        g_calibration.axes_to_calibrate[g_calibration.num_axes++] = AXIS_LH_Y;
+        g_calibration.axes_to_calibrate[g_calibration.num_axes++] = AXIS_LH_SLIDER;
     }
     if (get_var_misko_joy_calib()) {
-        calib_state.axes_to_calibrate[calib_state.num_axes++] = 7;
-        calib_state.axes_to_calibrate[calib_state.num_axes++] = 8;
+        g_calibration.axes_to_calibrate[g_calibration.num_axes++] = AXIS_MISKO_X;
+        g_calibration.axes_to_calibrate[g_calibration.num_axes++] = AXIS_MISKO_Y;
     }
 
-    if (calib_state.num_axes == 0) {
-        set_var_calibration_status("No axes selected for calibration");
-        calib_state.is_calibrating = false;
+    if (g_calibration.num_axes == 0) {
+        set_var_calibration_status("No axes selected");
+        g_calibration.is_calibrating = false;
         return;
     }
 
-    // === RESET min/max for all axes to be calibrated ===
-    for (size_t i = 0; i < calib_state.num_axes; i++) {
-        uint32_t axis_id = calib_state.axes_to_calibrate[i];
-        if (axis_id < MAX_AXES) {
-            system_settings.axis_min[axis_id] = UINT16_MAX;
-            system_settings.axis_max[axis_id] = 0;
-        }
+    // Reset min/max to extreme values
+    for (size_t i = 0; i < g_calibration.num_axes; i++) {
+        uint32_t a = g_calibration.axes_to_calibrate[i];
+        system_settings.axis_min[a] = 65535;
+        system_settings.axis_max[a] = 0;
     }
 
-    // Start timer
-    calib_state.timer = lv_timer_create(calibration_timer_cb, 50, &calib_state); // 50ms = 20Hz sampling
-    set_var_calibration_status("Calibration started - Move all controls!");
+    g_calibration.timer = lv_timer_create(calibration_timer_cb, 50, &g_calibration);
+    set_var_calibration_status("Move all controls fully!");
 }
 
-void stop_calibration(void) {
-    if (!calib_state.is_calibrating || calib_state.timer == NULL) {
-        return;
+void Inputs_StopCalibration(void)
+{
+    if (!g_calibration.is_calibrating) return;
+
+    g_calibration.is_calibrating = false;
+    if (g_calibration.timer) {
+        lv_timer_del(g_calibration.timer);
+        g_calibration.timer = NULL;
     }
 
-    calib_state.is_calibrating = false;
+    system_settings.num_axes = MAX_AXES;
+    system_settings.valid = 1;
 
-    // Timer will clean itself up in next callback
-    // But force delete to be safe
-    lv_timer_del(calib_state.timer);
-    calib_state.timer = NULL;
-
-    set_var_calibration_status("Calibration complete");
+    Flash_Write_All_Settings(FLASH_PAGE_ADDRESS, &system_settings);
+    set_var_calibration_status("Calibration saved!");
 }
+
+bool Inputs_IsCalibrating(void) { return g_calibration.is_calibrating; }

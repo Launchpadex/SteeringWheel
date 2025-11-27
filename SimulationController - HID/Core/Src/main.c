@@ -13,6 +13,7 @@
   * in the root directory of this software component.
   * If no LICENSE file comes with this software, it is provided AS-IS.
   *
+  *TODO: add deadzone, smoothing maybe
   ******************************************************************************
   */
 /* USER CODE END Header */
@@ -67,17 +68,14 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-    static uint32_t prev_cycles = 0;  // Store cycle count from previous TIM2 interrupt
-    uint32_t current_cycles;
-
 
     if (htim == &htim2)  // Input Sampling Timer
     {
-        current_cycles = DWT->CYCCNT;  // Capture cycles at the start of the interrupt
-        cycle_count_delta = current_cycles - prev_cycles;  // Cycles since last TIM2 interrupt
-        prev_cycles = current_cycles;  // Update for next interrupt
-        CollectAllInputs();
-        Send_to_HID();
+        static RawInputs    raw    = {0};
+        static MappedAxes   mapped = {0};
+        Inputs_CollectAll(&raw);
+        Inputs_MapAxes(&raw, &mapped);
+        Inputs_BuildAndSendReport(&mapped, raw.buttons);
     }
     if (htim == &htim3)  // lvgl Refresh Timer (2.5ms)
     {
@@ -89,11 +87,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         else if (SelectedScreen == 5)
         {
             tick_screen_calibration();
-        }
-        else if (SelectedScreen == 0){
-        	Read_Actual_Sampling_Frequency(cycle_count_delta, sampling_frequency_str, sizeof(sampling_frequency_str));
-        	set_var_real_samling_frequency_hz(sampling_frequency_str);
-        	tick_screen_main();
         }
         else if (SelectedScreen == 4){
         	tick_screen_settings();
@@ -107,11 +100,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     }
 }
 
-void init_cycle_counter(void) {
-    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
-    DWT->CYCCNT = 0;
-}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -178,15 +166,10 @@ int main(void)
   lvgl_ui_init();
 
   //ADC, Encoder,
-  InitADC();
+  Inputs_Init();
   HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
 
-  // Start all ADCs with DMA
-  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc1_values, ADC1_BUFFERSIZE);
-  HAL_ADC_Start_DMA(&hadc2, (uint32_t*)adc2_values, ADC2_BUFFERSIZE);
-  HAL_ADC_Start_DMA(&hadc4, (uint32_t*)adc4_values, ADC4_BUFFERSIZE);
-
-
+  //Read Settings and set
   Flash_Read_All_Settings(FLASH_PAGE_ADDRESS, &system_settings);
 
   Set_Sampling_Frequency(system_settings.frequency);
@@ -194,7 +177,6 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim2);	//Input Sampling
   HAL_TIM_Base_Start_IT(&htim3);	//lv_timer_handler() every 5ms
 
-  init_cycle_counter();
   /* USER CODE END 2 */
 
   /* Infinite loop */

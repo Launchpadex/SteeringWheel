@@ -30,15 +30,17 @@
 #define TLV_TYPE_BRIGHTNESS 0x02 // Length 4: int32_t brightness
 #define TLV_TYPE_FREQUENCY 0x03  // Length 4: int32_t frequency
 #define TLV_TYPE_FFB 0x04		 // Length 4: bool FFB
+#define TLV_TYPE_DEADZONE 0x05   // Length 4: bool FFB
 
 // System settings structure (all data in one place)
 typedef struct {
-    int32_t axis_min[MAX_AXES];    // Min values for up to 8 axes (index = axis_id - 1)
-    int32_t axis_max[MAX_AXES];    // Max values for up to 8 axes (index = axis_id - 1)
+    uint16_t axis_min[MAX_AXES];    // Min values for up to 8 axes (index = axis_id - 1)
+    uint16_t axis_max[MAX_AXES];    // Max values for up to 8 axes (index = axis_id - 1)
     uint8_t num_axes;       // Number of valid axes
     int32_t brightness;     // Display brightness
     int32_t frequency;      // Sampling Frequency
     bool	ffb;			// Forcefeedback on/off
+    int32_t deadzone;
     uint8_t valid;          // Flag: 1 if all settings are valid, 0 if partial/missing
 } SystemSettings;
 

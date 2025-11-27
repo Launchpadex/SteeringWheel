@@ -41,17 +41,17 @@ typedef struct _objects_t {
     lv_obj_t *obj18;
     lv_obj_t *calibration_status_main;
     lv_obj_t *force_feedback_status_main;
-    lv_obj_t *actual_sampling_frequency;
     lv_obj_t *brigthness_slider;
     lv_obj_t *btn_save_settings;
     lv_obj_t *obj19;
     lv_obj_t *sampling_freq_selector;
     lv_obj_t *settings_saved_popup;
-    lv_obj_t *calibration_status_calibration;
+    lv_obj_t *deadzone_slider;
     lv_obj_t *obj20;
-    lv_obj_t *calibration_status_calibration_1;
+    lv_obj_t *calibration_status_calibration;
     lv_obj_t *obj21;
     lv_obj_t *obj22;
+    lv_obj_t *calibration_status_calibration_1;
     lv_obj_t *obj23;
     lv_obj_t *obj24;
     lv_obj_t *obj25;
@@ -63,6 +63,8 @@ typedef struct _objects_t {
     lv_obj_t *obj31;
     lv_obj_t *obj32;
     lv_obj_t *obj33;
+    lv_obj_t *obj34;
+    lv_obj_t *obj35;
 } objects_t;
 
 extern objects_t objects;

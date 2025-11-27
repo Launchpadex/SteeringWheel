@@ -1020,7 +1020,6 @@
 "./Application/ui/styles.o"
 "./Application/ui/ui.o"
 "./Application/ui/vars.o"
-"./Application/ui/images/ui_image_circle.o"
 "./Core/Src/adc.o"
 "./Core/Src/dma.o"
 "./Core/Src/fmc.o"

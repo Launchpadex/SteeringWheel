@@ -17,7 +17,6 @@ RM := rm -rf
 -include Drivers/STM32G4xx_HAL_Driver/Src/subdir.mk
 -include Core/Startup/subdir.mk
 -include Core/Src/subdir.mk
--include Application/ui/images/subdir.mk
 -include Application/ui/subdir.mk
 -include Application/lvgl/tests/unity/subdir.mk
 -include Application/lvgl/tests/test_images/stride_align64/UNCOMPRESSED/subdir.mk
@@ -302,8 +301,8 @@ all: main-build
 main-build: SimulationController\ -\ HID.elf secondary-outputs
 
 # Tool invocations
-SimulationController\ -\ HID.elf SimulationController\ -\ HID.map: $(OBJS) $(USER_OBJS) C:\Users\Ziga\Desktop\EDUCATION\STM32Workspace\SimulationController\ -\ HID\STM32G474QETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "SimulationController - HID.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Ziga\Desktop\EDUCATION\STM32Workspace\SimulationController - HID\STM32G474QETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="SimulationController - HID.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+SimulationController\ -\ HID.elf SimulationController\ -\ HID.map: $(OBJS) $(USER_OBJS) C:\Users\Ziga\Desktop\GITHUB\SteeringWheel\SimulationController\ -\ HID\STM32G474QETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "SimulationController - HID.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Ziga\Desktop\GITHUB\SteeringWheel\SimulationController - HID\STM32G474QETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="SimulationController - HID.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

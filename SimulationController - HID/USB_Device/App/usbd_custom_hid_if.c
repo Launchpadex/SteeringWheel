@@ -91,7 +91,34 @@
 __ALIGN_BEGIN static uint8_t CUSTOM_HID_ReportDesc_FS[USBD_CUSTOM_HID_REPORT_DESC_SIZE] __ALIGN_END =
 {
   /* USER CODE BEGIN 0 */
-  0x00,
+	    0x05, 0x01,          // UsagePage(Generic Desktop[0x0001])
+	    0x09, 0x05,          // UsageId(Gamepad[0x0005])
+	    0xA1, 0x01,          // Collection(Application)
+	    0x85, 0x01,          //     ReportId(1)
+	    0x05, 0x02,          //     UsagePage(Simulation Controls[0x0002])
+	    0x09, 0xC8,          //     UsageId(Steering[0x00C8])
+	    0x09, 0xBB,          //     UsageId(Throttle[0x00BB])
+	    0x09, 0xC5,          //     UsageId(Brake[0x00C5])
+	    0x09, 0xC6,          //     UsageId(Clutch[0x00C6])
+	    0x16, 0x00, 0x80,    //     LogicalMinimum(-32,768)
+	    0x26, 0xFF, 0x7F,    //     LogicalMaximum(32,767)
+	    0x95, 0x04,          //     ReportCount(4)
+	    0x75, 0x10,          //     ReportSize(16)
+	    0x81, 0x02,          //     Input(Data, Variable, Absolute, NoWrap, Linear, PreferredState, NoNullPosition, BitField)
+	    0x05, 0x01,          //     UsagePage(Generic Desktop[0x0001])
+	    0x09, 0x33,          //     UsageId(Rx[0x0033])
+	    0x09, 0x34,          //     UsageId(Ry[0x0034])
+	    0x09, 0x35,          //     UsageId(Rz[0x0035])
+	    0x95, 0x03,          //     ReportCount(3)
+	    0x81, 0x02,          //     Input(Data, Variable, Absolute, NoWrap, Linear, PreferredState, NoNullPosition, BitField)
+	    0x05, 0x09,          //     UsagePage(Button[0x0009])
+	    0x19, 0x01,          //     UsageIdMin(Button 1[0x0001])
+	    0x29, 0x10,          //     UsageIdMax(Button 16[0x0010])
+	    0x15, 0x00,          //     LogicalMinimum(0)
+	    0x25, 0x01,          //     LogicalMaximum(1)
+	    0x95, 0x10,          //     ReportCount(16)
+	    0x75, 0x01,          //     ReportSize(1)
+	    0x81, 0x02,          //     Input(Data, Variable, Absolute, NoWrap, Linear, PreferredState, NoNullPosition, BitField)
   /* USER CODE END 0 */
   0xC0    /*     END_COLLECTION	             */
 };

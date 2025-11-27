@@ -59,12 +59,13 @@ enum FlowGlobalVariables {
     FLOW_GLOBAL_VARIABLE_PEDALS_CALIB = 41,
     FLOW_GLOBAL_VARIABLE_L_JOY_CALIB = 42,
     FLOW_GLOBAL_VARIABLE_MISKO_JOY_CALIB = 43,
-    FLOW_GLOBAL_VARIABLE_REAL_SAMLING_FREQUENCY_HZ = 44,
-    FLOW_GLOBAL_VARIABLE_FREQUENCIES = 45,
-    FLOW_GLOBAL_VARIABLE_SELECTED_FREQUENCY_POSITION = 46,
-    FLOW_GLOBAL_VARIABLE_FFB_STATE = 47,
-    FLOW_GLOBAL_VARIABLE_BRIGHTNESS = 48,
-    FLOW_GLOBAL_VARIABLE_AXIS_MIN_MAX = 49
+    FLOW_GLOBAL_VARIABLE_FREQUENCIES = 44,
+    FLOW_GLOBAL_VARIABLE_SELECTED_FREQUENCY_POSITION = 45,
+    FLOW_GLOBAL_VARIABLE_FFB_STATE = 46,
+    FLOW_GLOBAL_VARIABLE_BRIGHTNESS = 47,
+    FLOW_GLOBAL_VARIABLE_DEADZONE = 48,
+    FLOW_GLOBAL_VARIABLE_DEADZONE_CHAR = 49,
+    FLOW_GLOBAL_VARIABLE_AXIS_MIN_MAX = 50
 };
 
 // Native global variables
@@ -157,8 +158,6 @@ extern bool get_var_l_joy_calib();
 extern void set_var_l_joy_calib(bool value);
 extern bool get_var_misko_joy_calib();
 extern void set_var_misko_joy_calib(bool value);
-extern const char *get_var_real_samling_frequency_hz();
-extern void set_var_real_samling_frequency_hz(const char *value);
 extern const char *get_var_frequencies();
 extern void set_var_frequencies(const char *value);
 extern int32_t get_var_selected_frequency_position();
@@ -167,6 +166,10 @@ extern bool get_var_ffb_state();
 extern void set_var_ffb_state(bool value);
 extern int32_t get_var_brightness();
 extern void set_var_brightness(int32_t value);
+extern int32_t get_var_deadzone();
+extern void set_var_deadzone(int32_t value);
+extern const char *get_var_deadzone_char();
+extern void set_var_deadzone_char(const char *value);
 extern const char *get_var_axis_min_max();
 extern void set_var_axis_min_max(const char *value);
 

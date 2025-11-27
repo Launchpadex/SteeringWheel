@@ -2,45 +2,80 @@
 #define INPUT_COLLECTION_H
 
 #include "main.h"
-#include "vars.h"
 #include "lvgl.h"
+#include "vars.h"
+#include <stdbool.h>
 
-// Define number of buttons
-#define NUMBER_OF_BUTTONS 15
-#define ADC1_BUFFERSIZE 3
-#define ADC2_BUFFERSIZE 3
-#define ADC4_BUFFERSIZE 2
+#define NUMBER_OF_BUTTONS   15
+#define ADC1_BUFFERSIZE     3
+#define ADC2_BUFFERSIZE     3
+#define ADC4_BUFFERSIZE     2
+#define MAX_AXES            9
 
-#define MAX_AXES 9
+
+
+typedef enum {
+    AXIS_WHEEL = 0,
+    AXIS_THROTTLE,
+    AXIS_BRAKE,
+    AXIS_CLUTCH,
+    AXIS_LH_X,
+    AXIS_LH_Y,
+    AXIS_LH_SLIDER,
+    AXIS_MISKO_X,
+    AXIS_MISKO_Y
+} AxisId;
 
 typedef struct {
+    uint16_t buttons;
+    uint16_t wheel;
+    uint16_t throttle, brake, clutch;
+    uint16_t lh_x, lh_y, lh_slider;
+    uint16_t misko_x, misko_y;
+} RawInputs;
+
+typedef struct {
+    uint16_t values[MAX_AXES];
+} MappedAxes;
+
+// 17-byte report (Report ID = 1)
+typedef struct __attribute__((packed)) {
+    uint8_t  report_id;        // 0x01
+
+
+    uint16_t steering;   // AXIS_WHEEL
+    uint16_t throttle;   // AXIS_THROTTLE
+    uint16_t brake;      // AXIS_BRAKE
+    uint16_t clutch;     // AXIS_CLUTCH
+    uint16_t x_axis;     // AXIS_LH_X
+    uint16_t y_axis;     // AXIS_LH_Y
+    uint16_t slider;     // AXIS_LH_SLIDER (or Rz)
+
+    // 16 buttons packed into lower 16 bits (only 15 used + 1 padding)
+    uint16_t buttons;     // btn1 = bit0, btn15 = bit14
+
+} racing_report_t;
+extern racing_report_t rep;
+
+// Matches FLASH_PAGE.h exactly
+typedef struct {
     uint32_t axes_to_calibrate[MAX_AXES];
-    size_t num_axes;
-    size_t current_axis_index;
-    bool is_calibrating;
+    size_t   num_axes;
+    size_t   current_axis_index;
+    bool     is_calibrating;
     lv_timer_t *timer;
 } CalibrationState;
 
-// Extern variable declarations
-extern int16_t Button_States[NUMBER_OF_BUTTONS];
-extern uint16_t Encoder_Value;
-extern uint16_t adc1_values[ADC1_BUFFERSIZE]; // Throttle, Brake, Clutch
-extern uint16_t adc2_values[ADC2_BUFFERSIZE]; // Left-Hand X, Y
-extern uint16_t adc4_values[ADC4_BUFFERSIZE]; // Misko X, Y
+// === Public API ===
+void     Inputs_Init(void);
+void     Inputs_CollectAll(RawInputs* out);
+void     Inputs_MapAxes(const RawInputs* raw, MappedAxes* mapped);
+void Inputs_BuildAndSendReport(const MappedAxes *mapped, uint16_t button_mask_16bit);
 
-extern uint16_t mapped_values[MAX_AXES];
-extern char sampling_frequency_str[32];
+const RawInputs* Inputs_GetLatestSnapshot(void);
 
-// Function prototypes
-void InitADC(void);
-void CollectButton_StatesMisko(int16_t states[]);
-void CollectEncoderValue(uint16_t *encoder_value);
-void CollectAllInputs(void);
-void Set_Sampling_Frequency(int32_t frequency_hz);
-void Read_Actual_Sampling_Frequency(uint32_t cycle_count_delta, char* output_str, size_t str_size);
-void CalibrateAxis(const uint32_t* axis_ids, size_t num_axes);
-void start_calibration(void);
-void stop_calibration(void);
-void MapAxis(uint16_t* output_mapped_values);
-void Send_to_HID(void);
-#endif /* INPUT_COLLECTION_H */
+void     Inputs_StartCalibration(void);
+void     Inputs_StopCalibration(void);
+bool     Inputs_IsCalibrating(void);
+
+#endif

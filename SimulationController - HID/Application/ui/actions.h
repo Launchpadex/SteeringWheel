@@ -16,8 +16,10 @@ extern int slider4_value;
 extern int8_t FS25_Button_States[4];
 extern int8_t FS25_Switch_States[4];
 extern int Screen_Brightness;
+extern int deadzone;
 
 extern void Set_Brightness(uint8_t brightness);
+void Set_Sampling_Frequency(int32_t frequency_hz);
 extern void action_switch_to_sensor_status(lv_event_t * e);
 extern void action_switch_to_main_screen(lv_event_t * e);
 extern void action_switch_to_select_game(lv_event_t * e);
@@ -52,6 +54,9 @@ extern void action_save_settings(lv_event_t * e);
 extern void action_ffb_off(lv_event_t * e);
 extern void action_ffb_on(lv_event_t * e);
 extern void action_set_wheel_center(lv_event_t * e);
+extern void action_change_sampling_frequency(lv_event_t * e);
+extern void action_reset_calibration_values(lv_event_t * e);
+extern void action_change_deadzone(lv_event_t * e);
 
 
 #ifdef __cplusplus

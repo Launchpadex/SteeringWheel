@@ -62,6 +62,10 @@ uint32_t Flash_Write_All_Settings(uint32_t StartAddress, SystemSettings *setting
     tlv_buffer[ptr++] = (TLV_TYPE_FFB << 16) | 4;
     tlv_buffer[ptr++] = (uint32_t)settings->ffb;
 
+    // Add deadzone
+    tlv_buffer[ptr++] = (TLV_TYPE_DEADZONE << 16) | 4;
+    tlv_buffer[ptr++] = (uint32_t)settings->deadzone;
+
     // Pad to even number of uint32_t for uint64_t alignment if necessary
     if (ptr % 2 != 0) {
         tlv_buffer[ptr++] = 0xFFFFFFFF; // Padding with erased value
@@ -86,6 +90,7 @@ uint32_t Flash_Read_All_Settings(uint32_t StartAddress, SystemSettings *settings
     settings->brightness   = DEFAULT_BRIGHTNESS;
     settings->frequency    = DEFAULT_FREQUENCY;
     settings->ffb          = false;
+    settings->deadzone	   = 0;
     settings->valid        = 1;                   // Assume valid unless corrupted
 
     uint32_t addr = StartAddress;
@@ -142,6 +147,15 @@ uint32_t Flash_Read_All_Settings(uint32_t StartAddress, SystemSettings *settings
             case TLV_TYPE_FFB:
                 if (length == 4) {
                     settings->ffb = (bool)*(__IO int32_t *)addr;
+                    addr += 4;
+                } else {
+                    addr += length;
+                }
+                break;
+
+            case TLV_TYPE_DEADZONE:
+                if (length == 4) {
+                    settings->deadzone = *(__IO int32_t *)addr;
                     addr += 4;
                 } else {
                     addr += length;

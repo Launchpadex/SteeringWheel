@@ -36,6 +36,14 @@ void Set_Brightness(uint8_t brightness) {
     uint32_t ccr1 = (brightness * 999) / 100; // Map 0-100 to 0-999
     __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, ccr1);
 }
+
+void Set_Sampling_Frequency(int32_t frequency_hz) {
+    if (frequency_hz < 10)  frequency_hz = 10;
+    if (frequency_hz > 1000) frequency_hz = 1000;
+
+    uint32_t arr = (100000 / frequency_hz) - 1;
+    __HAL_TIM_SET_AUTORELOAD(&htim2, arr);
+}
 void action_change_screen_brightness(lv_event_t * e){
     lv_obj_t * slider = lv_event_get_target(e);
     Screen_Brightness = lv_slider_get_value(slider);
@@ -52,6 +60,7 @@ void action_save_settings(lv_event_t * e) {
     system_settings.frequency = (uint32_t)get_selector_position_to_frequency();
     system_settings.ffb = (bool)lv_obj_get_state(objects.ffb_switch);
     system_settings.brightness = (int32_t)get_var_brightness();
+    system_settings.deadzone = (int32_t)get_var_deadzone();
     Flash_Write_All_Settings(FLASH_PAGE_ADDRESS, &system_settings);
 
     Flash_Read_All_Settings(FLASH_PAGE_ADDRESS, &system_settings);
@@ -79,6 +88,14 @@ void action_ffb_on(lv_event_t * e){
 void action_set_wheel_center(lv_event_t * e){
 	htim4.Instance->CNT = 32000;
 }
+
+void action_change_deadzone(lv_event_t * e){
+	deadzone = get_var_deadzone();
+	char temp[16];
+	snprintf(temp, sizeof(temp), "%d", deadzone);
+	set_var_deadzone_char(temp);
+}
+
 #pragma endregion
 
 #pragma region SwitchScreens
@@ -115,14 +132,14 @@ void action_switch_to_calibration(lv_event_t * e){
 
 #pragma region Calibration
 void action_start_calibration(lv_event_t *e) {
-	start_calibration();
+	Inputs_StartCalibration();
 	loadScreen(SCREEN_ID_CALIBRATION_INDICATION);
 	SelectedScreen = 6;
 }
 
 void action_stop_calibration(lv_event_t *e) {
 	//resets checkboxes
-	stop_calibration();
+	Inputs_StopCalibration();
 	Flash_Write_All_Settings(FLASH_PAGE_ADDRESS, &system_settings);
 	set_var_wheel_calib(false);
 	set_var_pedals_calib(false);
@@ -133,6 +150,13 @@ void action_stop_calibration(lv_event_t *e) {
 	SelectedScreen = 5;
 
 	set_var_calibration_status("Calibration stopped");
+}
+
+void action_reset_calibration_values(lv_event_t * e){
+	for (size_t i = 0; i < MAX_AXES; i++){
+		system_settings.axis_min[i] = DEFAULT_AXIS_MAX;
+		system_settings.axis_max[i] = DEFAULT_AXIS_MIN;
+	}
 }
 
 #pragma endregion

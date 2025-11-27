@@ -10,9 +10,14 @@ static char force_feedback_status[100] = { 0 };
 char real_samling_frequency_hz[100] = { 0 };
 char frequencies[100] = { 0 };
 char axis_min_max[250] = { 0 };
+char deadzone_char[10] = { 0 };
 int32_t selected_frequency_position;
 bool ffb_state;
 int32_t brightness;
+int32_t deadzone;
+
+
+extern const RawInputs* Inputs_GetLatestSnapshot(void);
 
 //Calibration_variables
 static bool wheel_calib = false;
@@ -34,83 +39,101 @@ void set_var_real_samling_frequency_hz(const char *value) {
 
 
 #pragma region Sensor_Status
-//ANALOG_INPUTS
-int32_t get_var_wheel() { return Encoder_Value; }
-void set_var_wheel(int32_t value) { Encoder_Value = value; }
+// =============================================================================
+// ANALOG INPUTS – All now read from the atomic RawInputs snapshot
+// =============================================================================
+int32_t get_var_wheel(void)     { return Inputs_GetLatestSnapshot()->wheel; }
+void    set_var_wheel(int32_t value) { /* not used by hardware – keep empty or remove setter in EEZ */ }
 
-int32_t get_var_throttle() { return adc1_values[0]; }
-void set_var_throttle(int32_t value) { adc1_values[0] = value; }
+int32_t get_var_throttle(void)  { return Inputs_GetLatestSnapshot()->throttle; }
+void    set_var_throttle(int32_t value) { /* no direct write allowed */ }
 
-int32_t get_var_brake() { return adc1_values[1]; }
-void set_var_brake(int32_t value) { adc1_values[1] = value; }
+int32_t get_var_brake(void)     { return Inputs_GetLatestSnapshot()->brake; }
+void    set_var_brake(int32_t value)    { /* no direct write allowed */ }
 
-int32_t get_var_clutch() { return adc1_values[2]; }
-void set_var_clutch(int32_t value) { adc1_values[2] = value; }
+int32_t get_var_clutch(void)    { return Inputs_GetLatestSnapshot()->clutch; }
+void    set_var_clutch(int32_t value)   { /* no direct write allowed */ }
 
-int32_t get_var_joy_x() { return adc4_values[0]; }
-void set_var_joy_x(int32_t value) { adc4_values[0] = value; }
+int32_t get_var_joy_x(void)     { return Inputs_GetLatestSnapshot()->misko_x; }   // Misko joystick X
+void    set_var_joy_x(int32_t value)    { /* no direct write */ }
 
-int32_t get_var_joy_y() { return adc4_values[1]; }
-void set_var_joy_y(int32_t value) { adc4_values[1] = value; }
+int32_t get_var_joy_y(void)     { return Inputs_GetLatestSnapshot()->misko_y; }   // Misko joystick Y
+void    set_var_joy_y(int32_t value)    { /* no direct write */ }
 
-int32_t get_var_lh_x() { return adc2_values[0]; }
-void set_var_lh_x(int32_t value) { adc2_values[0] = value; }
+int32_t get_var_lh_x(void)       { return Inputs_GetLatestSnapshot()->lh_x; }
+void    set_var_lh_x(int32_t value)     { /* no direct write */ }
 
-int32_t get_var_lh_y() { return adc2_values[1]; }
-void set_var_lh_y(int32_t value) { adc2_values[1] = value; }
+int32_t get_var_lh_y(void)      { return Inputs_GetLatestSnapshot()->lh_y; }
+void    set_var_lh_y(int32_t value)     { /* no direct write */ }
 
-int32_t get_var_lh_r() { return adc2_values[2]; }
-void set_var_lh_r(int32_t value) { adc2_values[2] = value; }
+int32_t get_var_lh_r(void)      { return Inputs_GetLatestSnapshot()->lh_slider; }  // Slider = rotary on left hand
+void    set_var_lh_r(int32_t value)     { /* no direct write */ }
 
-//ANALOG_INPUTS
+// =============================================================================
+// END OF ANALOG INPUTS
+// =============================================================================
 #pragma endregion
 
-//BUTTON_INPUTS
-bool get_var_btn_joy() { return Button_States[0]; }
-void set_var_btn_joy(bool value) { Button_States[0] = value; }
 
-bool get_var_btn_esc() { return Button_States[1]; }
-void set_var_btn_esc(bool value) { Button_States[1] = value; }
 
-bool get_var_btn_ok() { return Button_States[2]; }
-void set_var_btn_ok(bool value) { Button_States[2] = value; }
+#pragma region BUTTON_INPUTS
+// =============================================================================
+// DIGITAL BUTTONS – Also from the same atomic snapshot
+// =============================================================================
 
-bool get_var_btn_up() { return Button_States[3]; }
-void set_var_btn_up(bool value) { Button_States[3] = value; }
+static inline bool button_bit(uint16_t buttons, uint8_t bit)
+{
+    return (buttons >> bit) & 1U;
+}
 
-bool get_var_btn_left() { return Button_States[4]; }
-void set_var_btn_left(bool value) { Button_States[4] = value; }
+bool get_var_btn_joy(void)     { return button_bit(Inputs_GetLatestSnapshot()->buttons, 0); }
+void set_var_btn_joy(bool value)     { /* no write from UI */ }
 
-bool get_var_btn_right() { return Button_States[5]; }
-void set_var_btn_right(bool value) { Button_States[5] = value; }
+bool get_var_btn_esc(void)     { return button_bit(Inputs_GetLatestSnapshot()->buttons, 1); }
+void set_var_btn_esc(bool value)     { /* no write */ }
 
-bool get_var_btn_down() { return Button_States[6]; }
-void set_var_btn_down(bool value) { Button_States[6] = value; }
+bool get_var_btn_ok(void)      { return button_bit(Inputs_GetLatestSnapshot()->buttons, 2); }
+void set_var_btn_ok(bool value)      { /* no write */ }
 
-bool get_var_lh_btn1() { return Button_States[7]; }
-void set_var_lh_btn1(bool value) { Button_States[7] = value; }
+bool get_var_btn_up(void)      { return button_bit(Inputs_GetLatestSnapshot()->buttons, 3); }
+void set_var_btn_up(bool value)      { /* no write */ }
 
-bool get_var_lh_btn2() { return Button_States[8]; }
-void set_var_lh_btn2(bool value) { Button_States[8] = value; }
+bool get_var_btn_left(void)    { return button_bit(Inputs_GetLatestSnapshot()->buttons, 4); }
+void set_var_btn_left(bool value)    { /* no write */ }
 
-bool get_var_base_btn1() { return Button_States[9]; }
-void set_var_base_btn1(bool value) { Button_States[9] = value; }
+bool get_var_btn_right(void)   { return button_bit(Inputs_GetLatestSnapshot()->buttons, 5); }
+void set_var_btn_right(bool value)   { /* no write */ }
 
-bool get_var_base_btn2() { return Button_States[10]; }
-void set_var_base_btn2(bool value) { Button_States[10] = value; }
+bool get_var_btn_down(void)     { return button_bit(Inputs_GetLatestSnapshot()->buttons, 6); }
+void set_var_btn_down(bool value)    { /* no write */ }
 
-bool get_var_base_btn3() { return Button_States[11]; }
-void set_var_base_btn3(bool value) { Button_States[11] = value; }
+bool get_var_lh_btn1(void)     { return button_bit(Inputs_GetLatestSnapshot()->buttons, 7); }
+void set_var_lh_btn1(bool value)     { /* no write */ }
 
-bool get_var_base_btn4() { return Button_States[12]; }
-void set_var_base_btn4(bool value) { Button_States[12] = value; }
+bool get_var_lh_btn2(void)     { return button_bit(Inputs_GetLatestSnapshot()->buttons, 8); }
+void set_var_lh_btn2(bool value)     { /* no write */ }
 
-bool get_var_shifter_l() { return Button_States[13]; }
-void set_var_shifter_l(bool value) { Button_States[13] = value; }
+bool get_var_base_btn1(void)   { return button_bit(Inputs_GetLatestSnapshot()->buttons, 9); }
+void set_var_base_btn1(bool value)   { /* no write */ }
 
-bool get_var_shifter_r() { return Button_States[14]; }
-void set_var_shifter_r(bool value) { Button_States[14] = value; }
-//BUTTON_INPUTS
+bool get_var_base_btn2(void)   { return button_bit(Inputs_GetLatestSnapshot()->buttons, 10); }
+void set_var_base_btn2(bool value)   { /* no write */ }
+
+bool get_var_base_btn3(void)   { return button_bit(Inputs_GetLatestSnapshot()->buttons, 11); }
+void set_var_base_btn3(bool value)   { /* no write */ }
+
+bool get_var_base_btn4(void)   { return button_bit(Inputs_GetLatestSnapshot()->buttons, 12); }
+void set_var_base_btn4(bool value)   { /* no write */ }
+
+bool get_var_shifter_l(void)   { return button_bit(Inputs_GetLatestSnapshot()->buttons, 13); }
+void set_var_shifter_l(bool value)   { /* no write */ }
+
+bool get_var_shifter_r(void)   { return button_bit(Inputs_GetLatestSnapshot()->buttons, 14); }
+void set_var_shifter_r(bool value)   { /* no write */ }
+
+// =============================================================================
+// END OF BUTTON INPUTS
+// =============================================================================
 #pragma endregion
 
 
@@ -202,5 +225,23 @@ int32_t get_var_brightness() {
 void set_var_brightness(int32_t value) {
     brightness = value;
 }
+
+int32_t get_var_deadzone(){
+	return deadzone;
+}
+
+void set_var_deadzone(int32_t value){
+	deadzone = value;
+}
+
+const char *get_var_deadzone_char(){
+	return deadzone_char;
+}
+
+void set_var_deadzone_char(const char *value) {
+    strncpy(deadzone_char, value, sizeof(deadzone_char) / sizeof(char));
+    deadzone_char[sizeof(deadzone_char) / sizeof(char) - 1] = 0;
+}
+
 #pragma endregion
 
