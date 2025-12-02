@@ -22,7 +22,7 @@
 #include "tim.h"
 #include "vars.h"
 #include "FLASH_PAGE.h"
-
+#include "screens.h"
 
 /* Static Variables ----------------------------------------------------------*/
 uint8_t buf1[RESOLUTION_HORIZONTAL * RESOLUTION_VERTICAL / 10 * BYTES_PER_PIXEL];
@@ -143,4 +143,13 @@ void lvgl_ui_init(){
 	char temp[16];
 	snprintf(temp, sizeof(temp), "%d", deadzone);
 	set_var_deadzone_char(temp);
+	lv_bar_set_range(objects.status_wheel, system_settings.axis_min[0], system_settings.axis_max[0]);
+	lv_bar_set_range(objects.status_throttle, system_settings.axis_min[1], system_settings.axis_max[1]);
+	lv_bar_set_range(objects.status_brake, system_settings.axis_min[2], system_settings.axis_max[2]);
+	lv_bar_set_range(objects.status_clutch, system_settings.axis_min[3], system_settings.axis_max[3]);
+	lv_bar_set_range(objects.status_lh_x, system_settings.axis_min[4], system_settings.axis_max[4]);
+	lv_bar_set_range(objects.status_lh_y, system_settings.axis_min[5], system_settings.axis_max[5]);
+	lv_bar_set_range(objects.status_lh_slider, system_settings.axis_min[6], system_settings.axis_max[6]);
+	lv_bar_set_range(objects.status_misko_x, system_settings.axis_min[7], system_settings.axis_max[7]);
+	lv_bar_set_range(objects.status_misko_y, system_settings.axis_min[8], system_settings.axis_max[8]);
 }

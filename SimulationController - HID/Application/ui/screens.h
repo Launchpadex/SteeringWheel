@@ -53,18 +53,18 @@ typedef struct _objects_t {
     lv_obj_t *obj22;
     lv_obj_t *calibration_status_calibration_1;
     lv_obj_t *obj23;
+    lv_obj_t *status_wheel;
+    lv_obj_t *status_throttle;
+    lv_obj_t *status_brake;
+    lv_obj_t *status_clutch;
+    lv_obj_t *status_misko_x;
+    lv_obj_t *status_misko_y;
+    lv_obj_t *status_lh_x;
+    lv_obj_t *status_lh_y;
+    lv_obj_t *status_lh_slider;
     lv_obj_t *obj24;
     lv_obj_t *obj25;
     lv_obj_t *obj26;
-    lv_obj_t *obj27;
-    lv_obj_t *obj28;
-    lv_obj_t *obj29;
-    lv_obj_t *obj30;
-    lv_obj_t *obj31;
-    lv_obj_t *obj32;
-    lv_obj_t *obj33;
-    lv_obj_t *obj34;
-    lv_obj_t *obj35;
 } objects_t;
 
 extern objects_t objects;

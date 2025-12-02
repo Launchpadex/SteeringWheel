@@ -126,9 +126,17 @@ void Inputs_MapAxes(const RawInputs *raw, MappedAxes *mapped)
 
             output = (int32_t)temp;
         }
-        if ((uint16_t)output <= (system_settings.deadzone / 2)){
-        	output = 0;
+
+        uint16_t range_middle      = (INT16_MAX / 2);
+        uint16_t half_deadzone     = (int16_t)(system_settings.deadzone / 2);
+
+        uint16_t deadzone_low  = range_middle - half_deadzone;
+        uint16_t deadzone_high = range_middle + half_deadzone;
+
+        if (output >= deadzone_low && output <= deadzone_high) {
+            output = (INT16_MAX / 2);
         }
+
         mapped->values[i] = (uint16_t)output;
     }
 }
@@ -147,6 +155,8 @@ void Inputs_BuildAndSendReport(const MappedAxes *mapped, uint16_t button_mask_16
     rep.x_axis   = (uint16_t)mapped->values[AXIS_LH_X];
     rep.y_axis   = (uint16_t)mapped->values[AXIS_LH_Y];
     rep.slider   = (uint16_t)mapped->values[AXIS_LH_SLIDER];
+    rep.misko_x  = (uint16_t)mapped->values[AXIS_MISKO_X];
+    rep.misko_y  = (uint16_t)mapped->values[AXIS_MISKO_Y];
 
     rep.buttons = button_mask_16bit;
 
