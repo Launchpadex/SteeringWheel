@@ -1,6 +1,6 @@
 {
   "navigation": {
-    "selectedUserPageObject": "[UI.eez-project]:/userPages/4",
+    "selectedUserPageObject": "[UI.eez-project]:/userPages/1",
     "selectedGlobalVariableObject": "[UI.eez-project]:/variables/globalVariables/49",
     "subnavigationSelectedItems": {
       "variables-tab/sub-navigation/selected-item": "Global"
@@ -209,10 +209,10 @@
                 {
                   "type": "tab",
                   "id": "#123783c7-0337-4cf9-9b0b-05f75ca46d6b",
-                  "name": "SensorStatus",
+                  "name": "Settings",
                   "component": "editor",
                   "config": {
-                    "objectPath": "[UI.eez-project]:/userPages/4",
+                    "objectPath": "[UI.eez-project]:/userPages/1",
                     "permanent": false
                   },
                   "icon": "svg:page"
@@ -1074,9 +1074,7 @@
     "[UI.eez-project]:/userPages/4[flow-state]": {
       "selection": {
         "0": {
-          "18": {
-            "$selected": true
-          }
+          "18": {}
         }
       },
       "transform": {

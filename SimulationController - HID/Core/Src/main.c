@@ -52,8 +52,6 @@
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
 SystemSettings system_settings;
-uint32_t cycle_count_delta;
-
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -139,13 +137,13 @@ int main(void)
   MX_ADC2_Init();
   MX_ADC4_Init();
   MX_TIM4_Init();
-  MX_USB_Device_Init();
   MX_FMC_Init();
   MX_SPI1_Init();
   MX_TIM8_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
   MX_QUADSPI1_Init();
+  MX_USB_Device_Init();
   /* USER CODE BEGIN 2 */
 
   HAL_Delay(100);
