@@ -21,7 +21,8 @@ static uint16_t adc4_values[ADC4_BUFFERSIZE];
 /* Global */
 static CalibrationState g_calibration = {0};
 static RawInputs g_latest_inputs = {0};
-racing_report_t rep = {};
+racing_report_1_t rep1 = {};
+racing_report_2_t rep2 = {};
 
 /*=====================================================================*/
 void Inputs_Init(void)
@@ -113,7 +114,7 @@ void Inputs_MapAxes(const RawInputs *raw, MappedAxes *mapped)
         }
         else if (raw_val >= max)
         {
-            output = 32767;
+            output = 65534;
         }
         else if (range == 0)
         {
@@ -122,20 +123,20 @@ void Inputs_MapAxes(const RawInputs *raw, MappedAxes *mapped)
         else
         {
 
-            uint64_t temp = (uint64_t)(raw_val - min) * 32768ULL;
-            temp /= range;                 // now in 0 … 32768
+            uint64_t temp = (uint64_t)(raw_val - min) * 65534ULL;
+            temp /= range;                 // now in 0 … 65534
 
             output = (int32_t)temp;
         }
 
-        uint16_t range_middle      = (INT16_MAX / 2);
+        uint16_t range_middle      = INT16_MAX;
         uint16_t half_deadzone     = (int16_t)(system_settings.deadzone / 2);
 
         uint16_t deadzone_low  = range_middle - half_deadzone;
         uint16_t deadzone_high = range_middle + half_deadzone;
 
         if (output >= deadzone_low && output <= deadzone_high) {
-            output = (INT16_MAX / 2);
+            output = (INT16_MAX);
         }
 
         mapped->values[i] = (uint16_t)output;
@@ -147,22 +148,27 @@ void Inputs_MapAxes(const RawInputs *raw, MappedAxes *mapped)
 void Inputs_BuildAndSendReport(const MappedAxes *mapped, uint16_t button_mask_16bit)
 {
 
-	rep.report_id = (uint8_t)1;
+	//HID DEVICE 1
+	//rep1.report_id = (uint8_t)1;
 
-    rep.steering = (uint16_t)mapped->values[AXIS_WHEEL];
-    rep.throttle = (uint16_t)mapped->values[AXIS_THROTTLE];
-    rep.brake    = (uint16_t)mapped->values[AXIS_BRAKE];
-    rep.clutch   = (uint16_t)mapped->values[AXIS_CLUTCH];
-    rep.x_axis   = (uint16_t)mapped->values[AXIS_LH_X];
-    rep.y_axis   = (uint16_t)mapped->values[AXIS_LH_Y];
-    rep.slider   = (uint16_t)mapped->values[AXIS_LH_SLIDER];
-    //rep.misko_x  = (uint16_t)mapped->values[AXIS_MISKO_X];
-    //rep.misko_y  = (uint16_t)mapped->values[AXIS_MISKO_Y];
+    rep1.steering = (uint16_t)mapped->values[AXIS_WHEEL];
+    rep1.throttle = (uint16_t)mapped->values[AXIS_THROTTLE];
+    rep1.brake    = (uint16_t)mapped->values[AXIS_BRAKE];
+    rep1.clutch   = (uint16_t)mapped->values[AXIS_CLUTCH];
+    rep1.x_axis   = (uint16_t)mapped->values[AXIS_LH_X];
+    rep1.y_axis   = (uint16_t)mapped->values[AXIS_LH_Y];
+    rep1.slider   = (uint16_t)mapped->values[AXIS_LH_SLIDER];
+    rep1.buttons  = button_mask_16bit;
 
-    rep.buttons = button_mask_16bit;
+    //HID DEVICE 2
+    //rep2.report_id = (uint8_t)2;
 
-    USBD_CUSTOM_HID_SendReport(&hUsbDevice, (uint8_t*)&rep, sizeof(rep));
-    USBD_CUSTOM_HID2_SendReport(&hUsbDevice, (uint8_t*)&rep, sizeof(rep));
+    rep2.misko_x  = (uint16_t)mapped->values[AXIS_MISKO_X];
+    rep2.misko_y  = (uint16_t)mapped->values[AXIS_MISKO_Y];
+
+
+    USBD_CUSTOM_HID_SendReport(&hUsbDevice, (uint8_t*)&rep1, sizeof(rep1));
+    USBD_CUSTOM_HID2_SendReport(&hUsbDevice, (uint8_t*)&rep2, sizeof(rep2));
 }
 
 

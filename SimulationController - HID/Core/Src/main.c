@@ -39,6 +39,7 @@
 #include "lvgl_lcd.h"
 #include "FLASH_PAGE.h"
 #include "SaveUserData.h"
+#include "usb_device.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

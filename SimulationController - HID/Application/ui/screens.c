@@ -603,7 +603,7 @@ void create_screen_settings() {
             objects.deadzone_slider = obj;
             lv_obj_set_pos(obj, 136, 168);
             lv_obj_set_size(obj, 150, 10);
-            lv_slider_set_range(obj, 0, 1000);
+            lv_slider_set_range(obj, 0, 10000);
             lv_obj_add_event_cb(obj, action_change_deadzone, LV_EVENT_VALUE_CHANGED, (void *)0);
             lv_obj_add_event_cb(obj, event_handler_cb_settings_deadzone_slider, LV_EVENT_ALL, 0);
         }
