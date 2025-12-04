@@ -2,22 +2,22 @@
 /**
   ******************************************************************************
   * @file           : usbd_desc.c
-  * @version        : v3.0_Cube
+  * @version        : v1.0_Cube
   * @brief          : Header for usbd_conf.c file.
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
+  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
+  * All rights reserved.</center></h2>
   *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
+  * This software component is licensed by ST under Ultimate Liberty license
+  * SLA0044, the "License"; You may not use this file except in compliance with
+  * the License. You may obtain a copy of the License at:
+  *                             www.st.com/SLA0044
   *
   ******************************************************************************
   */
 /* USER CODE END Header */
-
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __USBD_DESC__C__
 #define __USBD_DESC__C__
@@ -50,7 +50,7 @@
 #define         DEVICE_ID2          (UID_BASE + 0x4)
 #define         DEVICE_ID3          (UID_BASE + 0x8)
 
-#define         USB_SIZ_STRING_SERIAL       0x1A
+#define  USB_SIZ_STRING_SERIAL       0x1A
 
 /* USER CODE BEGIN EXPORTED_CONSTANTS */
 
@@ -104,7 +104,8 @@
   * @{
   */
 
-extern USBD_DescriptorsTypeDef     CUSTOM_HID_Desc;
+/** Descriptor for the Usb device. */
+extern USBD_DescriptorsTypeDef USBD_Desc;
 
 /* USER CODE BEGIN EXPORTED_VARIABLES */
 
@@ -141,3 +142,4 @@ extern USBD_DescriptorsTypeDef     CUSTOM_HID_Desc;
 
 #endif /* __USBD_DESC__C__ */
 
+/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

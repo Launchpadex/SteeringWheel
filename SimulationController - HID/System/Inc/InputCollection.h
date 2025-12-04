@@ -50,8 +50,8 @@ typedef struct __attribute__((packed)) {
     uint16_t x_axis;     // AXIS_LH_X
     uint16_t y_axis;     // AXIS_LH_Y
     uint16_t slider;     // AXIS_LH_SLIDER (or Rz)
-    uint16_t misko_x;	 // AXIS_MISKO_X
-    uint16_t misko_y;	 // AXIS_MISKO_Y
+    //uint16_t misko_x;	 // AXIS_MISKO_X
+    //uint16_t misko_y;	 // AXIS_MISKO_Y
 
     // 16 buttons packed into lower 16 bits (only 15 used + 1 padding)
     uint16_t buttons;     // btn1 = bit0, btn15 = bit14

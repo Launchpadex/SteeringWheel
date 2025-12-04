@@ -41,17 +41,11 @@ extern "C" {
 /** @defgroup USBD_CUSTOM_HID_Exported_Defines
   * @{
   */
-#define CUSTOM_HID_EPIN_ADDR                         0x81U
 
-#ifndef CUSTOM_HID_EPIN_SIZE
+#define CUSTOM_HID_STR_DESC                          "STM32 HID CUSTOM"
+
 #define CUSTOM_HID_EPIN_SIZE                         0x40U
-#endif
-
-#define CUSTOM_HID_EPOUT_ADDR                        0x01U
-
-#ifndef CUSTOM_HID_EPOUT_SIZE
 #define CUSTOM_HID_EPOUT_SIZE                        0x40U
-#endif
 
 #define USB_CUSTOM_HID_CONFIG_DESC_SIZ               41U
 #define USB_CUSTOM_HID_DESC_SIZ                      9U
@@ -65,11 +59,11 @@ extern "C" {
 #endif /* CUSTOM_HID_FS_BINTERVAL */
 
 #ifndef USBD_CUSTOMHID_OUTREPORT_BUF_SIZE
-#define USBD_CUSTOMHID_OUTREPORT_BUF_SIZE            0x02U
+#define USBD_CUSTOMHID_OUTREPORT_BUF_SIZE            0x22U
 #endif /* USBD_CUSTOMHID_OUTREPORT_BUF_SIZE */
 
 #ifndef USBD_CUSTOM_HID_REPORT_DESC_SIZE
-#define USBD_CUSTOM_HID_REPORT_DESC_SIZE             163U
+#define USBD_CUSTOM_HID_REPORT_DESC_SIZE             51U
 #endif /* USBD_CUSTOM_HID_REPORT_DESC_SIZE */
 
 #define CUSTOM_HID_DESCRIPTOR_TYPE                   0x21U
@@ -87,7 +81,6 @@ extern "C" {
   * @}
   */
 
-
 /** @defgroup USBD_CORE_Exported_TypesDefinitions
   * @{
   */
@@ -100,15 +93,15 @@ typedef enum
 typedef struct _USBD_CUSTOM_HID_Itf
 {
   uint8_t *pReport;
-  int8_t (* Init)(void);
-  int8_t (* DeInit)(void);
-  int8_t (* OutEvent)(uint8_t event_idx, uint8_t state);
+  int8_t (*Init)(void);
+  int8_t (*DeInit)(void);
+  int8_t (*OutEvent)(uint8_t event_idx, uint8_t state);
 
 } USBD_CUSTOM_HID_ItfTypeDef;
 
 typedef struct
 {
-  uint8_t  Report_buf[USBD_CUSTOMHID_OUTREPORT_BUF_SIZE];
+  uint8_t Report_buf[USBD_CUSTOMHID_OUTREPORT_BUF_SIZE];
   uint32_t Protocol;
   uint32_t IdleState;
   uint32_t AltSetting;
@@ -118,8 +111,6 @@ typedef struct
 /**
   * @}
   */
-
-
 
 /** @defgroup USBD_CORE_Exported_Macros
   * @{
@@ -133,8 +124,13 @@ typedef struct
   * @{
   */
 
-extern USBD_ClassTypeDef USBD_CUSTOM_HID;
-#define USBD_CUSTOM_HID_CLASS &USBD_CUSTOM_HID
+extern USBD_ClassTypeDef USBD_HID_CUSTOM;
+
+extern uint8_t CUSTOM_HID_IN_EP;
+extern uint8_t CUSTOM_HID_OUT_EP;
+extern uint8_t CUSTOM_HID_ITF_NBR;
+extern uint8_t CUSTOM_HID_STR_DESC_IDX;
+
 /**
   * @}
   */
@@ -150,6 +146,8 @@ uint8_t USBD_CUSTOM_HID_ReceivePacket(USBD_HandleTypeDef *pdev);
 uint8_t USBD_CUSTOM_HID_RegisterInterface(USBD_HandleTypeDef *pdev,
                                           USBD_CUSTOM_HID_ItfTypeDef *fops);
 
+void USBD_Update_HID_Custom_DESC(uint8_t *desc, uint8_t itf_no, uint8_t in_ep, uint8_t out_ep, uint8_t str_idx);
+
 /**
   * @}
   */
@@ -158,7 +156,7 @@ uint8_t USBD_CUSTOM_HID_RegisterInterface(USBD_HandleTypeDef *pdev,
 }
 #endif
 
-#endif  /* __USB_CUSTOMHID_H */
+#endif /* __USB_CUSTOMHID_H */
 /**
   * @}
   */

@@ -5,11 +5,12 @@
 #include "InputCollection.h"
 #include "FLASH_PAGE.h"
 #include "SaveUserData.h"
-#include "usbd_custom_hid_if.h"
+#include "usbd_hid_custom_if.h"
+#include "usbd_hid_custom_if2.h"
 
 extern TIM_HandleTypeDef htim2, htim4;
 extern ADC_HandleTypeDef hadc1, hadc2, hadc4;
-extern USBD_HandleTypeDef hUsbDeviceFS;
+extern USBD_HandleTypeDef hUsbDevice;
 extern SystemSettings system_settings;
 
 /* DMA buffers – private to this file */
@@ -155,12 +156,13 @@ void Inputs_BuildAndSendReport(const MappedAxes *mapped, uint16_t button_mask_16
     rep.x_axis   = (uint16_t)mapped->values[AXIS_LH_X];
     rep.y_axis   = (uint16_t)mapped->values[AXIS_LH_Y];
     rep.slider   = (uint16_t)mapped->values[AXIS_LH_SLIDER];
-    rep.misko_x  = (uint16_t)mapped->values[AXIS_MISKO_X];
-    rep.misko_y  = (uint16_t)mapped->values[AXIS_MISKO_Y];
+    //rep.misko_x  = (uint16_t)mapped->values[AXIS_MISKO_X];
+    //rep.misko_y  = (uint16_t)mapped->values[AXIS_MISKO_Y];
 
     rep.buttons = button_mask_16bit;
 
-    USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, (uint8_t*)&rep, sizeof(rep));
+    USBD_CUSTOM_HID_SendReport(&hUsbDevice, (uint8_t*)&rep, sizeof(rep));
+    USBD_CUSTOM_HID2_SendReport(&hUsbDevice, (uint8_t*)&rep, sizeof(rep));
 }
 
 

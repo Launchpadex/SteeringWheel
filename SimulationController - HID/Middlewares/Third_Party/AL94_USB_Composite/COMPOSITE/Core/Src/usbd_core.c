@@ -102,7 +102,6 @@ USBD_StatusTypeDef USBD_Init(USBD_HandleTypeDef *pdev,
 
   /* Unlink previous class resources */
   pdev->pClass = NULL;
-  pdev->pUserData = NULL;
   pdev->pConfDesc = NULL;
 
   /* Assign USBD Descriptors */
@@ -142,7 +141,6 @@ USBD_StatusTypeDef USBD_DeInit(USBD_HandleTypeDef *pdev)
   {
     pdev->pClass->DeInit(pdev, (uint8_t)pdev->dev_config);
     pdev->pClass = NULL;
-    pdev->pUserData = NULL;
   }
 
   /* Free Device descriptors resources */
@@ -178,17 +176,17 @@ USBD_StatusTypeDef USBD_RegisterClass(USBD_HandleTypeDef *pdev, USBD_ClassTypeDe
   pdev->pClass = pclass;
 
   /* Get Device Configuration Descriptor */
-#ifdef USE_USB_HS
-  if (pdev->pClass->GetHSConfigDescriptor != NULL)
+  if (pdev->dev_speed == USBD_SPEED_HIGH)
   {
-    pdev->pConfDesc = (void *)pdev->pClass->GetHSConfigDescriptor(&len);
+	  if (pdev->pClass->GetHSConfigDescriptor != NULL)
+	  {
+		  pdev->pConfDesc = (void *)pdev->pClass->GetHSConfigDescriptor(&len);
+	  }
   }
-#else /* Default USE_USB_FS */
-  if (pdev->pClass->GetFSConfigDescriptor != NULL)
+  else if (pdev->pClass->GetFSConfigDescriptor != NULL)
   {
-    pdev->pConfDesc = (void *)pdev->pClass->GetFSConfigDescriptor(&len);
+	  pdev->pConfDesc = (void *)pdev->pClass->GetFSConfigDescriptor(&len);
   }
-#endif /* USE_USB_FS */
 
   return USBD_OK;
 }
@@ -500,13 +498,10 @@ USBD_StatusTypeDef USBD_LL_Reset(USBD_HandleTypeDef *pdev)
     return USBD_FAIL;
   }
 
-  if (pdev->pClassData != NULL)
-  {
-    if (pdev->pClass->DeInit != NULL)
-    {
-      (void)pdev->pClass->DeInit(pdev, (uint8_t)pdev->dev_config);
-    }
-  }
+	if (pdev->pClass->DeInit != NULL)
+	{
+	  (void)pdev->pClass->DeInit(pdev, (uint8_t)pdev->dev_config);
+	}
 
   /* Open EP0 OUT */
   (void)USBD_LL_OpenEP(pdev, 0x00U, USBD_EP_TYPE_CTRL, USB_MAX_EP0_SIZE);
