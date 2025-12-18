@@ -58,7 +58,7 @@ typedef struct __attribute__((packed)) {
 extern racing_report_1_t rep1;
 
 typedef struct __attribute__((packed)) {
-    //uint8_t  report_id;        // 0x02
+    uint8_t  report_id;        // 0x02
 
 
     uint16_t misko_x;	 // AXIS_MISKO_X

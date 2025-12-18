@@ -161,7 +161,7 @@ void Inputs_BuildAndSendReport(const MappedAxes *mapped, uint16_t button_mask_16
     rep1.buttons  = button_mask_16bit;
 
     //HID DEVICE 2
-    //rep2.report_id = (uint8_t)2;
+    rep2.report_id = (uint8_t)1;
 
     rep2.misko_x  = (uint16_t)mapped->values[AXIS_MISKO_X];
     rep2.misko_y  = (uint16_t)mapped->values[AXIS_MISKO_Y];

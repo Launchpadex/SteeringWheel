@@ -130,7 +130,7 @@ __ALIGN_BEGIN static uint8_t CUSTOM_HID2_ReportDesc[USBD_CUSTOM_HID2_REPORT_DESC
     	    0x27, 0xFE, 0xFF, 0x00, 0x00,    //     LogicalMaximum(65,534)
     	    0x95, 0x02,                      //     ReportCount(2)
     	    0x75, 0x10,                      //     ReportSize(16)
-
+    	    0x81, 0x02,                      //     Input(Data, Variable, Absolute, NoWrap, Linear, PreferredState, NoNullPosition, BitField)
         /* USER CODE END 0 */
         0xC0 /*     END_COLLECTION	             */
 };

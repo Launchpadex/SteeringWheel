@@ -2243,7 +2243,7 @@
               "groupIndex": 0,
               "min": 0,
               "minType": "literal",
-              "max": 1000,
+              "max": 10000,
               "maxType": "literal",
               "mode": "NORMAL",
               "value": "deadzone",
