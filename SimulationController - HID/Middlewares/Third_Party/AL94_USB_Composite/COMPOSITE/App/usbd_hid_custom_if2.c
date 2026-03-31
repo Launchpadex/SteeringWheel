@@ -118,21 +118,24 @@ uint8_t buffer2[0x40];
 
 /** Usb HID report descriptor. */
 __ALIGN_BEGIN static uint8_t CUSTOM_HID2_ReportDesc[USBD_CUSTOM_HID2_REPORT_DESC_SIZE] __ALIGN_END =
-    {
-        /* USER CODE BEGIN 0 */
-    	    0x05, 0x01,                      // UsagePage(Generic Desktop[0x0001])
-    	    0x09, 0x05,                      // UsageId(Gamepad[0x0005])
-    	    0xA1, 0x01,                      // Collection(Application)
-    	    0x85, 0x01,                      //     ReportId(1)
-    	    0x09, 0x30,                      //     UsageId(X[0x0030])
-    	    0x09, 0x31,                      //     UsageId(Y[0x0031])
-    	    0x15, 0x00,                      //     LogicalMinimum(0)
-    	    0x27, 0xFE, 0xFF, 0x00, 0x00,    //     LogicalMaximum(65,534)
-    	    0x95, 0x02,                      //     ReportCount(2)
-    	    0x75, 0x10,                      //     ReportSize(16)
-    	    0x81, 0x02,                      //     Input(Data, Variable, Absolute, NoWrap, Linear, PreferredState, NoNullPosition, BitField)
-        /* USER CODE END 0 */
-        0xC0 /*     END_COLLECTION	             */
+{
+    /* USER CODE BEGIN 0 */
+    0x05, 0x01,                      // UsagePage(Generic Desktop[0x0001])
+    0x09, 0x04,                      // UsageId(Joystick[0x0004])
+    0xA1, 0x01,                      // Collection(Application)
+    0x85, 0x02,                      //     ReportId(2)
+
+    // First: Define the X and Y axes (4 bytes)
+    0x09, 0x30,                      //     UsageId(X[0x0030])
+    0x09, 0x31,                      //     UsageId(Y[0x0031])
+    0x15, 0x00,                      //     LogicalMinimum(0)
+    0x27, 0xFE, 0xFF, 0x00, 0x00,    //     LogicalMaximum(65,534)
+    0x95, 0x02,                      //     ReportCount(2)
+    0x75, 0x10,                      //     ReportSize(16)
+    0x81, 0x02,                      //     Input(Data, Variable, Absolute)
+
+    /* USER CODE END 0 */
+    0xC0 /*     END_COLLECTION	             */
 };
 
 /* USER CODE BEGIN PRIVATE_VARIABLES */

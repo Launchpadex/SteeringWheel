@@ -168,9 +168,9 @@ __ALIGN_BEGIN static uint8_t USBD_CUSTOM_HID_CfgFSDesc[USB_CUSTOM_HID_CONFIG_DES
         0x01,
         0x00,                             /* bCountryCode: Hardware target country */
         0x01,                             /* bNumDescriptors: Number of CUSTOM_HID class descriptors to follow */
-        0x22,                             /* bDescriptorType */
-        USBD_CUSTOM_HID_REPORT_DESC_SIZE, /* wItemLength: Total length of Report descriptor */
-        0x00,
+		0x22,                                           /* bDescriptorType */
+		LOBYTE(USBD_CUSTOM_HID_REPORT_DESC_SIZE),      /* wItemLength LOW byte */
+		HIBYTE(USBD_CUSTOM_HID_REPORT_DESC_SIZE),      /* wItemLength HIGH byte */
         /******************** Descriptor of Custom HID endpoints ********************/
         /* 27 */
         0x07,                   /* bLength: Endpoint Descriptor size */
@@ -228,9 +228,9 @@ __ALIGN_BEGIN static uint8_t USBD_CUSTOM_HID_CfgHSDesc[USB_CUSTOM_HID_CONFIG_DES
         0x01,
         0x00,                             /* bCountryCode: Hardware target country */
         0x01,                             /* bNumDescriptors: Number of CUSTOM_HID class descriptors to follow */
-        0x22,                             /* bDescriptorType */
-        USBD_CUSTOM_HID_REPORT_DESC_SIZE, /* wItemLength: Total length of Report descriptor */
-        0x00,
+		0x22,                                           /* bDescriptorType */
+		LOBYTE(USBD_CUSTOM_HID_REPORT_DESC_SIZE),      /* wItemLength LOW byte */
+		HIBYTE(USBD_CUSTOM_HID_REPORT_DESC_SIZE),      /* wItemLength HIGH byte */
         /******************** Descriptor of Custom HID endpoints ********************/
         /* 27 */
         0x07,                   /* bLength: Endpoint Descriptor size */
@@ -288,9 +288,9 @@ __ALIGN_BEGIN static uint8_t USBD_CUSTOM_HID_OtherSpeedCfgDesc[USB_CUSTOM_HID_CO
         0x01,
         0x00,                             /* bCountryCode: Hardware target country */
         0x01,                             /* bNumDescriptors: Number of CUSTOM_HID class descriptors to follow */
-        0x22,                             /* bDescriptorType */
-        USBD_CUSTOM_HID_REPORT_DESC_SIZE, /* wItemLength: Total length of Report descriptor */
-        0x00,
+		0x22,                                           /* bDescriptorType */
+		LOBYTE(USBD_CUSTOM_HID_REPORT_DESC_SIZE),      /* wItemLength LOW byte */
+		HIBYTE(USBD_CUSTOM_HID_REPORT_DESC_SIZE),      /* wItemLength HIGH byte */
         /******************** Descriptor of Custom HID endpoints ********************/
         /* 27 */
         0x07,                   /* bLength: Endpoint Descriptor size */
@@ -323,8 +323,8 @@ __ALIGN_BEGIN static uint8_t USBD_CUSTOM_HID_Desc[USB_CUSTOM_HID_DESC_SIZ] __ALI
         0x00,                             /* bCountryCode: Hardware target country */
         0x01,                             /* bNumDescriptors: Number of CUSTOM_HID class descriptors to follow */
         0x22,                             /* bDescriptorType */
-        USBD_CUSTOM_HID_REPORT_DESC_SIZE, /* wItemLength: Total length of Report descriptor */
-        0x00,
+		LOBYTE(USBD_CUSTOM_HID_REPORT_DESC_SIZE),      /* wItemLength LOW byte */
+		HIBYTE(USBD_CUSTOM_HID_REPORT_DESC_SIZE),      /* wItemLength HIGH byte */
 };
 
 /* USB Standard Device Descriptor */
@@ -486,6 +486,32 @@ static uint8_t USBD_CUSTOM_HID_Setup(USBD_HandleTypeDef *pdev,
       hhid->IsReportAvailable = 1U;
       (void)USBD_CtlPrepareRx(pdev, hhid->Report_buf, req->wLength);
       break;
+
+    case CUSTOM_HID_REQ_GET_REPORT:
+    {
+      uint8_t report_id = (uint8_t)(req->wValue & 0xFF);
+      uint8_t report_type = (uint8_t)(req->wValue >> 8);
+
+      // Report ID 9 = PID Pool Feature Report
+      if (report_id == 9 && report_type == 3) // 3 = Feature Report
+      {
+        static uint8_t pid_pool_report[5] = {
+          0x09,        // Report ID
+          0x00, 0x10,  // RAM Pool Size = 4096 bytes (little-endian)
+          0x28,        // Max Simultaneous Effects = 40
+          0x03         // Flags: Device Managed + Shared Parameters
+        };
+
+        (void)USBD_CtlSendData(pdev, pid_pool_report, sizeof(pid_pool_report));
+      }
+      else
+      {
+        // Unknown report - send empty
+        USBD_CtlError(pdev, req);
+        ret = USBD_FAIL;
+      }
+      break;
+    }
 
     default:
       USBD_CtlError(pdev, req);

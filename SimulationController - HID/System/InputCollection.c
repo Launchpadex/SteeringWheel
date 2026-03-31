@@ -147,10 +147,8 @@ void Inputs_MapAxes(const RawInputs *raw, MappedAxes *mapped)
 
 void Inputs_BuildAndSendReport(const MappedAxes *mapped, uint16_t button_mask_16bit)
 {
-
-	//HID DEVICE 1
-	//rep1.report_id = (uint8_t)1;
-
+    // Interface 1
+    rep1.report_id = (uint8_t)1;
     rep1.steering = (uint16_t)mapped->values[AXIS_WHEEL];
     rep1.throttle = (uint16_t)mapped->values[AXIS_THROTTLE];
     rep1.brake    = (uint16_t)mapped->values[AXIS_BRAKE];
@@ -160,15 +158,18 @@ void Inputs_BuildAndSendReport(const MappedAxes *mapped, uint16_t button_mask_16
     rep1.slider   = (uint16_t)mapped->values[AXIS_LH_SLIDER];
     rep1.buttons  = button_mask_16bit;
 
-    //HID DEVICE 2
-    rep2.report_id = (uint8_t)1;
-
-    rep2.misko_x  = (uint16_t)mapped->values[AXIS_MISKO_X];
-    rep2.misko_y  = (uint16_t)mapped->values[AXIS_MISKO_Y];
-
-
+    // Send Interface 1
     USBD_CUSTOM_HID_SendReport(&hUsbDevice, (uint8_t*)&rep1, sizeof(rep1));
-    USBD_CUSTOM_HID2_SendReport(&hUsbDevice, (uint8_t*)&rep2, sizeof(rep2));
+
+    // Wait for Interface 1 to finish (proper polling) -- Still issues
+    //for(volatile uint32_t i = 0; i < 20000; i++);
+
+    // Interface 2
+    //rep2.report_id = (uint8_t)2;
+    //rep2.misko_x  = (uint16_t)mapped->values[AXIS_MISKO_X];
+    //rep2.misko_y  = (uint16_t)mapped->values[AXIS_MISKO_Y];
+
+    //USBD_CUSTOM_HID2_SendReport(&hUsbDevice, (uint8_t*)&rep2, sizeof(rep2));
 }
 
 

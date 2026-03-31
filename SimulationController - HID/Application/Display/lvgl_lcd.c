@@ -29,7 +29,7 @@ uint8_t buf1[RESOLUTION_HORIZONTAL * RESOLUTION_VERTICAL / 10 * BYTES_PER_PIXEL]
 volatile uint8_t t_irq_state;
 lv_coord_t last_x = 0;
 lv_coord_t last_y = 0;
-uint16_t available_frequencies[] = {10, 50, 100, 250, 500, 750, 1000};
+uint16_t available_frequencies[] = {10, 50, 100, 250, 400, 500, 750, 1000};
 char available_frequencies_str[100] = "";
 
 extern SystemSettings system_settings;

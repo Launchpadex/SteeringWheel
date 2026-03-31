@@ -40,7 +40,7 @@ typedef struct {
 
 // 17-byte report (Report ID = 1)
 typedef struct __attribute__((packed)) {
-    //uint8_t  report_id;        // 0x01
+    uint8_t  report_id;        // 0x01
 
 
     uint16_t steering;   // AXIS_WHEEL
@@ -58,13 +58,10 @@ typedef struct __attribute__((packed)) {
 extern racing_report_1_t rep1;
 
 typedef struct __attribute__((packed)) {
-    uint8_t  report_id;        // 0x02
-
-
-    uint16_t misko_x;	 // AXIS_MISKO_X
-    uint16_t misko_y;	 // AXIS_MISKO_Y
+    uint8_t  report_id;        // 0x04
+    uint16_t misko_x;
+    uint16_t misko_y;
 } racing_report_2_t;
-extern racing_report_2_t rep2;
 
 // Matches FLASH_PAGE.h exactly
 typedef struct {
