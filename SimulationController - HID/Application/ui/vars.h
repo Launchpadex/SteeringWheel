@@ -65,7 +65,10 @@ enum FlowGlobalVariables {
     FLOW_GLOBAL_VARIABLE_BRIGHTNESS = 47,
     FLOW_GLOBAL_VARIABLE_DEADZONE = 48,
     FLOW_GLOBAL_VARIABLE_DEADZONE_CHAR = 49,
-    FLOW_GLOBAL_VARIABLE_AXIS_MIN_MAX = 50
+    FLOW_GLOBAL_VARIABLE_AXIS_MIN_MAX = 50,
+    FLOW_GLOBAL_VARIABLE_FFB_SETTINGS = 51,
+    FLOW_GLOBAL_VARIABLE_SETTING_VALUE = 52,
+    FLOW_GLOBAL_VARIABLE_FFB_SETTINGS_SELECTED = 53
 };
 
 // Native global variables
@@ -172,6 +175,12 @@ extern const char *get_var_deadzone_char();
 extern void set_var_deadzone_char(const char *value);
 extern const char *get_var_axis_min_max();
 extern void set_var_axis_min_max(const char *value);
+extern const char *get_var_ffb_settings();
+extern void set_var_ffb_settings(const char *value);
+extern const char *get_var_setting_value();
+extern void set_var_setting_value(const char *value);
+extern int32_t get_var_ffb_settings_selected();
+extern void set_var_ffb_settings_selected(int32_t value);
 
 
 #ifdef __cplusplus

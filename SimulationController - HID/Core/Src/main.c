@@ -40,6 +40,7 @@
 #include "FLASH_PAGE.h"
 #include "SaveUserData.h"
 #include "usb_device.h"
+#include "ffb_pid.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -66,7 +67,6 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-
     if (htim == &htim2)  // Input Sampling Timer
     {
         static RawInputs    raw    = {0};
@@ -74,26 +74,36 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         Inputs_CollectAll(&raw);
         Inputs_MapAxes(&raw, &mapped);
         Inputs_BuildAndSendReport(&mapped, raw.buttons);
+
+        uint32_t current_time = HAL_GetTick();
+        int32_t position = (int32_t)mapped.values[AXIS_WHEEL];
+        int32_t speed = FFB_CalculateSpeed(AXIS_WHEEL, position, current_time);
+        int32_t accel = FFB_CalculateAccel(AXIS_WHEEL, speed, current_time);
+        int16_t current_mA = FFB_GetForce(position, speed, accel, current_time);
+        FFB_SetMotorCurrent(current_mA);
     }
-    if (htim == &htim3)  // lvgl Refresh Timer (2.5ms)
+    else if (htim == &htim3)  // lvgl Refresh Timer (2.5ms)
     {
         lv_timer_handler();
-        if (SelectedScreen == 1)
+        if (SelectedScreen == 6)
         {
             tick_screen_sensor_status();
         }
-        else if (SelectedScreen == 5)
+        else if (SelectedScreen == 2)
+        {
+            tick_screen_settings();
+        }
+        else if (SelectedScreen == 4)
         {
             tick_screen_calibration();
         }
-        else if (SelectedScreen == 4){
-        	tick_screen_settings();
-		}
-        else if (SelectedScreen == 5){
-        	tick_screen_calibration();
+        else if (SelectedScreen == 5)
+        {
+            tick_screen_calibration_indication();
         }
-        else if (SelectedScreen == 6){
-        	tick_screen_calibration_indication();
+        else if (SelectedScreen == 3)
+        {
+            tick_screen_ffb_settings();
         }
     }
 }

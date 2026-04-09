@@ -1,9 +1,12 @@
 
+#include <stdio.h>
+#include <stdlib.h>
 #include "vars.h"
 #include "InputCollection.h"
 #include "screens.h"
 #include "string.h"
 #include "lvgl_lcd.h"
+#include "FLASH_PAGE.h"  /* for system_settings */
 
 static char calibration_status[30] = {0};
 static char force_feedback_status[100] = { 0 };
@@ -11,10 +14,15 @@ char real_samling_frequency_hz[100] = { 0 };
 char frequencies[100] = { 0 };
 char axis_min_max[250] = { 0 };
 char deadzone_char[10] = { 0 };
+char ffb_settings[100] = { 0 };
+
 int32_t selected_frequency_position;
 bool ffb_state;
 int32_t brightness;
 int32_t deadzone;
+int32_t setting_value;
+int32_t ffb_settings_selected;
+char setting_value_str[20] = { 0 };
 
 
 extern const RawInputs* Inputs_GetLatestSnapshot(void);
@@ -241,6 +249,41 @@ const char *get_var_deadzone_char(){
 void set_var_deadzone_char(const char *value) {
     strncpy(deadzone_char, value, sizeof(deadzone_char) / sizeof(char));
     deadzone_char[sizeof(deadzone_char) / sizeof(char) - 1] = 0;
+}
+
+#pragma endregion
+
+#pragma region FFB_Settings
+
+const char *get_var_ffb_settings() {
+    return ffb_settings;
+}
+void set_var_ffb_settings(const char *value) {
+    strncpy(ffb_settings, value, sizeof(ffb_settings) / sizeof(char));
+    ffb_settings[sizeof(ffb_settings) / sizeof(char) - 1] = 0;
+}
+
+
+const char *get_var_setting_value() {
+    return setting_value_str;
+}
+void set_var_setting_value(const char *value) {
+    int32_t parsed = atoi(value);
+    if (parsed < 0) {
+        parsed = 0;
+    }
+    setting_value = parsed;
+    strncpy(setting_value_str, value, sizeof(setting_value_str));
+    setting_value_str[sizeof(setting_value_str) / sizeof(char) - 1] = 0;
+}
+
+
+
+int32_t get_var_ffb_settings_selected() {
+    return ffb_settings_selected;
+}
+void set_var_ffb_settings_selected(int32_t value) {
+    ffb_settings_selected = value;
 }
 
 #pragma endregion

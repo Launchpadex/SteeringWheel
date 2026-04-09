@@ -10,6 +10,7 @@ extern "C" {
 typedef struct _objects_t {
     lv_obj_t *main;
     lv_obj_t *settings;
+    lv_obj_t *ffb_settings;
     lv_obj_t *calibration;
     lv_obj_t *calibration_indication;
     lv_obj_t *sensor_status;
@@ -48,11 +49,13 @@ typedef struct _objects_t {
     lv_obj_t *settings_saved_popup;
     lv_obj_t *deadzone_slider;
     lv_obj_t *obj20;
-    lv_obj_t *calibration_status_calibration;
+    lv_obj_t *ffb_settings_selector;
     lv_obj_t *obj21;
+    lv_obj_t *calibration_status_calibration;
     lv_obj_t *obj22;
-    lv_obj_t *calibration_status_calibration_1;
     lv_obj_t *obj23;
+    lv_obj_t *calibration_status_calibration_1;
+    lv_obj_t *obj24;
     lv_obj_t *status_wheel;
     lv_obj_t *status_throttle;
     lv_obj_t *status_brake;
@@ -62,9 +65,9 @@ typedef struct _objects_t {
     lv_obj_t *status_lh_x;
     lv_obj_t *status_lh_y;
     lv_obj_t *status_lh_slider;
-    lv_obj_t *obj24;
     lv_obj_t *obj25;
     lv_obj_t *obj26;
+    lv_obj_t *obj27;
 } objects_t;
 
 extern objects_t objects;
@@ -72,11 +75,12 @@ extern objects_t objects;
 enum ScreensEnum {
     SCREEN_ID_MAIN = 1,
     SCREEN_ID_SETTINGS = 2,
-    SCREEN_ID_CALIBRATION = 3,
-    SCREEN_ID_CALIBRATION_INDICATION = 4,
-    SCREEN_ID_SENSOR_STATUS = 5,
-    SCREEN_ID_SELECT_GAME = 6,
-    SCREEN_ID_FARMING_SIMULATOR2025 = 7,
+    SCREEN_ID_FFB_SETTINGS = 3,
+    SCREEN_ID_CALIBRATION = 4,
+    SCREEN_ID_CALIBRATION_INDICATION = 5,
+    SCREEN_ID_SENSOR_STATUS = 6,
+    SCREEN_ID_SELECT_GAME = 7,
+    SCREEN_ID_FARMING_SIMULATOR2025 = 8,
 };
 
 void create_screen_main();
@@ -84,6 +88,9 @@ void tick_screen_main();
 
 void create_screen_settings();
 void tick_screen_settings();
+
+void create_screen_ffb_settings();
+void tick_screen_ffb_settings();
 
 void create_screen_calibration();
 void tick_screen_calibration();

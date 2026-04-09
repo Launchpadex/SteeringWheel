@@ -66,10 +66,41 @@ uint32_t Flash_Write_All_Settings(uint32_t StartAddress, SystemSettings *setting
     tlv_buffer[ptr++] = (TLV_TYPE_DEADZONE << 16) | 4;
     tlv_buffer[ptr++] = (uint32_t)settings->deadzone;
 
-    // Pad to even number of uint32_t for uint64_t alignment if necessary
-    if (ptr % 2 != 0) {
-        tlv_buffer[ptr++] = 0xFFFFFFFF; // Padding with erased value
-    }
+    // Add FFB gain
+    tlv_buffer[ptr++] = (TLV_TYPE_FFB_GAIN << 16) | 4;
+    tlv_buffer[ptr++] = (uint32_t)settings->ffb_gain;
+
+    // Add FFB max current
+    tlv_buffer[ptr++] = (TLV_TYPE_FFB_MAX_CURRENT << 16) | 4;
+    tlv_buffer[ptr++] = (uint32_t)settings->ffb_max_current_mA;
+
+    // Add FFB speed threshold
+    tlv_buffer[ptr++] = (TLV_TYPE_FFB_SPD_THRESHOLD << 16) | 4;
+    tlv_buffer[ptr++] = (uint32_t)settings->ffb_spd_threshold;
+
+    // Add FFB acceleration threshold
+    tlv_buffer[ptr++] = (TLV_TYPE_FFB_ACL_THRESHOLD << 16) | 4;
+    tlv_buffer[ptr++] = (uint32_t)settings->ffb_acl_threshold;
+
+    // Add FFB force threshold
+    tlv_buffer[ptr++] = (TLV_TYPE_FFB_FRC_THRESHOLD << 16) | 4;
+    tlv_buffer[ptr++] = (uint32_t)settings->ffb_frc_threshold;
+
+    // Add FFB spring coefficient
+    tlv_buffer[ptr++] = (TLV_TYPE_FFB_SPRING_COEF << 16) | 4;
+    tlv_buffer[ptr++] = (uint32_t)settings->ffb_spring_coef;
+
+    // Add FFB damper coefficient
+    tlv_buffer[ptr++] = (TLV_TYPE_FFB_DAMPER_COEF << 16) | 4;
+    tlv_buffer[ptr++] = (uint32_t)settings->ffb_damper_coef;
+
+    // Add FFB friction coefficient
+    tlv_buffer[ptr++] = (TLV_TYPE_FFB_FRICTION_COEF << 16) | 4;
+    tlv_buffer[ptr++] = (uint32_t)settings->ffb_friction_coef;
+
+    // Add FFB inertia coefficient
+    tlv_buffer[ptr++] = (TLV_TYPE_FFB_INERTIA_COEF << 16) | 4;
+    tlv_buffer[ptr++] = (uint32_t)settings->ffb_inertia_coef;
 
     // Convert to uint64_t for writing
     uint16_t numberofdoublewords = ptr / 2;
@@ -91,7 +122,16 @@ uint32_t Flash_Read_All_Settings(uint32_t StartAddress, SystemSettings *settings
     settings->frequency    = DEFAULT_FREQUENCY;
     settings->ffb          = false;
     settings->deadzone	   = 0;
-    settings->valid        = 1;                   // Assume valid unless corrupted
+    settings->ffb_gain     = 100; // Default gain 100%
+    settings->ffb_max_current_mA = 5000; // Default max current 5A
+    settings->ffb_spd_threshold = 10; // Default speed threshold
+    settings->ffb_acl_threshold = 5; // Default acceleration threshold
+    settings->ffb_frc_threshold = 20; // Default force threshold
+    settings->ffb_spring_coef = 50; // Default spring coefficient
+    settings->ffb_damper_coef = 30; // Default damper coefficient
+    settings->ffb_friction_coef = 25; // Default friction coefficient
+    settings->ffb_inertia_coef = 40; // Default inertia coefficient
+    settings->valid        = 1;      // Assume valid unless corrupted
 
     uint32_t addr = StartAddress;
 
@@ -156,6 +196,87 @@ uint32_t Flash_Read_All_Settings(uint32_t StartAddress, SystemSettings *settings
             case TLV_TYPE_DEADZONE:
                 if (length == 4) {
                     settings->deadzone = *(__IO int32_t *)addr;
+                    addr += 4;
+                } else {
+                    addr += length;
+                }
+                break;
+
+            case TLV_TYPE_FFB_GAIN:
+                if (length == 4) {
+                    settings->ffb_gain = *(__IO int32_t *)addr;
+                    addr += 4;
+                } else {
+                    addr += length;
+                }
+                break;
+
+            case TLV_TYPE_FFB_MAX_CURRENT:
+                if (length == 4) {
+                    settings->ffb_max_current_mA = *(__IO int32_t *)addr;
+                    addr += 4;
+                } else {
+                    addr += length;
+                }
+                break;
+
+            case TLV_TYPE_FFB_SPD_THRESHOLD:
+                if (length == 4) {
+                    settings->ffb_spd_threshold = *(__IO int32_t *)addr;
+                    addr += 4;
+                } else {
+                    addr += length;
+                }
+                break;
+
+            case TLV_TYPE_FFB_ACL_THRESHOLD:
+                if (length == 4) {
+                    settings->ffb_acl_threshold = *(__IO int32_t *)addr;
+                    addr += 4;
+                } else {
+                    addr += length;
+                }
+                break;
+
+            case TLV_TYPE_FFB_FRC_THRESHOLD:
+                if (length == 4) {
+                    settings->ffb_frc_threshold = *(__IO int32_t *)addr;
+                    addr += 4;
+                } else {
+                    addr += length;
+                }
+                break;
+
+            case TLV_TYPE_FFB_SPRING_COEF:
+                if (length == 4) {
+                    settings->ffb_spring_coef = *(__IO int32_t *)addr;
+                    addr += 4;
+                } else {
+                    addr += length;
+                }
+                break;
+
+            case TLV_TYPE_FFB_DAMPER_COEF:
+                if (length == 4) {
+                    settings->ffb_damper_coef = *(__IO int32_t *)addr;
+                    addr += 4;
+                } else {
+                    addr += length;
+                }
+                break;
+
+            case TLV_TYPE_FFB_FRICTION_COEF:
+                if (length == 4) {
+                    settings->ffb_friction_coef = *(__IO int32_t *)addr;
+                    addr += 4;
+                } else {
+                    addr += length;
+                }
+                break;
+
+            case TLV_TYPE_FFB_INERTIA_COEF:
+                if (length == 4) {
+                    settings->ffb_inertia_coef = *(__IO int32_t *)addr;
                     addr += 4;
                 } else {
                     addr += length;

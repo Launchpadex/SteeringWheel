@@ -20,6 +20,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_custom_hid_if.h"
+#include "ffb_pid.h"
 
 /* USER CODE BEGIN INCLUDE */
 

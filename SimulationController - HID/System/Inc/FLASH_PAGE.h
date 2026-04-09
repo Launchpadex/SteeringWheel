@@ -30,7 +30,16 @@
 #define TLV_TYPE_BRIGHTNESS 0x02 // Length 4: int32_t brightness
 #define TLV_TYPE_FREQUENCY 0x03  // Length 4: int32_t frequency
 #define TLV_TYPE_FFB 0x04		 // Length 4: bool FFB
-#define TLV_TYPE_DEADZONE 0x05   // Length 4: bool FFB
+#define TLV_TYPE_DEADZONE 0x05   // Length 4: int32_t deadzone
+#define TLV_TYPE_FFB_GAIN 0x06   // Length 4: int32_t ffb_gain
+#define TLV_TYPE_FFB_MAX_CURRENT 0x07 // Length 4: int32_t ffb_max_current_mA
+#define TLV_TYPE_FFB_SPD_THRESHOLD 0x08 // Length 4: int32_t ffb_spd_threshold
+#define TLV_TYPE_FFB_ACL_THRESHOLD 0x09 // Length 4: int32_t ffb_acl_threshold
+#define TLV_TYPE_FFB_FRC_THRESHOLD 0x0A // Length 4: int32_t ffb_frc_threshold
+#define TLV_TYPE_FFB_SPRING_COEF 0x0B // Length 4: int32_t ffb_spring_coef
+#define TLV_TYPE_FFB_DAMPER_COEF 0x0C // Length 4: int32_t ffb_damper_coef
+#define TLV_TYPE_FFB_FRICTION_COEF 0x0D // Length 4: int32_t ffb_friction_coef
+#define TLV_TYPE_FFB_INERTIA_COEF 0x0E // Length 4: int32_t ffb_inertia_coef
 
 // System settings structure (all data in one place)
 typedef struct {
@@ -41,6 +50,15 @@ typedef struct {
     int32_t frequency;      // Sampling Frequency
     bool	ffb;			// Forcefeedback on/off
     int32_t deadzone;
+    int32_t ffb_gain;       // Overall FFB gain
+    int32_t ffb_max_current_mA; // Max current in mA
+    int32_t ffb_spd_threshold; // Speed threshold for damper/friction
+    int32_t ffb_acl_threshold; // Acceleration threshold for inertia
+    int32_t ffb_frc_threshold; // Force threshold for friction
+    int32_t ffb_spring_coef; // Spring coefficient
+    int32_t ffb_damper_coef; // Damper coefficient
+    int32_t ffb_friction_coef; // Friction coefficient
+    int32_t ffb_inertia_coef; // Inertia coefficient
     uint8_t valid;          // Flag: 1 if all settings are valid, 0 if partial/missing
 } SystemSettings;
 

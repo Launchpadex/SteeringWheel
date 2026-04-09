@@ -57,6 +57,14 @@ extern void action_set_wheel_center(lv_event_t * e);
 extern void action_change_sampling_frequency(lv_event_t * e);
 extern void action_reset_calibration_values(lv_event_t * e);
 extern void action_change_deadzone(lv_event_t * e);
+extern void action_switch_to_ffb_settings_screen(lv_event_t * e);
+extern void action_ffb_setting_minus1(lv_event_t * e);
+extern void action_ffb_setting_plus1(lv_event_t * e);
+extern void action_ffb_setting_minus10(lv_event_t * e);
+extern void action_ffb_setting_plus10(lv_event_t * e);
+extern void action_ffb_setting_minus100(lv_event_t * e);
+extern void action_ffb_setting_plus100(lv_event_t * e);
+extern void action_ffb_settings_ok(lv_event_t * e);
 
 
 #ifdef __cplusplus

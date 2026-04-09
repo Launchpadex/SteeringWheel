@@ -18,6 +18,9 @@
 #include "lvgl.h"
 #include "ui.h"
 #include "actions.h"
+
+/* External variables */
+extern char ffb_settings[100];
 #include "misko_touch.h"
 #include "tim.h"
 #include "vars.h"
@@ -31,6 +34,7 @@ lv_coord_t last_x = 0;
 lv_coord_t last_y = 0;
 uint16_t available_frequencies[] = {10, 50, 100, 250, 400, 500, 750, 1000};
 char available_frequencies_str[100] = "";
+char ffb_settings_str[100] = "";
 
 extern SystemSettings system_settings;
 
@@ -132,6 +136,41 @@ uint32_t get_selector_position_from_frequency(int32_t frequency) {
     return position;
 }
 
+/* Format all FFB settings into string */
+const char* format_ffb_settings_string(void) {
+    static char temp_buffer[100];
+    snprintf(temp_buffer, sizeof(temp_buffer),
+            "Gain: %ld%%\n"
+            "MaxCurrent: %ldmA\n"
+            "SpeedThreshold: %ld\n"
+            "AccelThreshold: %ld\n"
+            "FrictionThreshold: %ld\n"
+            "SpringCoef: %ld\n"
+            "DamperCoef: %ld\n"
+            "FrictionCoef: %ld\n"
+            "InertiaCoef: %ld",
+            system_settings.ffb_gain,
+            system_settings.ffb_max_current_mA,
+            system_settings.ffb_spd_threshold,
+            system_settings.ffb_acl_threshold,
+            system_settings.ffb_frc_threshold,
+            system_settings.ffb_spring_coef,
+            system_settings.ffb_damper_coef,
+            system_settings.ffb_friction_coef,
+            system_settings.ffb_inertia_coef
+        );
+    return temp_buffer;
+}
+
+void update_var_setting_value(int32_t value) {
+    if (value < 0) {
+        value = 0;
+    }
+    char temp[20];
+    snprintf(temp, sizeof(temp), "%ld", value);
+    set_var_setting_value(temp);
+}
+
 void lvgl_ui_init(){
 	convert_frequencies_to_string();
 	set_var_frequencies(available_frequencies_str);
@@ -143,6 +182,7 @@ void lvgl_ui_init(){
 	char temp[16];
 	snprintf(temp, sizeof(temp), "%d", deadzone);
 	set_var_deadzone_char(temp);
+	set_var_ffb_settings(format_ffb_settings_string());
 	lv_bar_set_range(objects.status_wheel, system_settings.axis_min[0], system_settings.axis_max[0]);
 	lv_bar_set_range(objects.status_throttle, system_settings.axis_min[1], system_settings.axis_max[1]);
 	lv_bar_set_range(objects.status_brake, system_settings.axis_min[2], system_settings.axis_max[2]);
