@@ -1,7 +1,8 @@
 {
   "navigation": {
-    "selectedUserPageObject": "[UI.eez-project]:/userPages/1",
-    "selectedGlobalVariableObject": "[UI.eez-project]:/variables/globalVariables/49",
+    "selectedUserPageObject": "[UI.eez-project]:/userPages/2",
+    "selectedActionObject": "[UI.eez-project]:/actions/-1",
+    "selectedGlobalVariableObject": "[UI.eez-project]:/variables/globalVariables/53",
     "subnavigationSelectedItems": {
       "variables-tab/sub-navigation/selected-item": "Global"
     }
@@ -118,7 +119,7 @@
             {
               "type": "row",
               "id": "#0eb955c8-e507-4bda-a791-0847e492b040",
-              "weight": 15,
+              "weight": 18.92358803986711,
               "children": [
                 {
                   "type": "tabset",
@@ -189,10 +190,21 @@
             {
               "type": "tabset",
               "id": "EDITORS",
-              "weight": 65,
+              "weight": 61.07641196013289,
               "enableDeleteWhenEmpty": false,
               "enableClose": false,
               "children": [
+                {
+                  "type": "tab",
+                  "id": "#1674696d-235f-4035-a28b-87baf1b98ae4",
+                  "name": "FFBSettings",
+                  "component": "editor",
+                  "config": {
+                    "objectPath": "[UI.eez-project]:/userPages/2",
+                    "permanent": false
+                  },
+                  "icon": "svg:page"
+                },
                 {
                   "type": "tab",
                   "id": "#91ef2746-bc80-4aea-be72-48ed1b361ad8",
@@ -200,7 +212,7 @@
                   "component": "editor",
                   "config": {
                     "objectPath": "[UI.eez-project]:/userPages/1",
-                    "permanent": false
+                    "permanent": true
                   },
                   "icon": "svg:page"
                 },
@@ -1023,7 +1035,7 @@
       "transform": {
         "translate": {
           "x": -160,
-          "y": -220
+          "y": -120
         },
         "scale": 2
       },
@@ -1036,12 +1048,17 @@
     },
     "[UI.eez-project]:/userPages/2[flow-state]": {
       "selection": {
-        "0": {}
+        "0": {
+          "1": {
+            "$selected": true
+          },
+          "12": {}
+        }
       },
       "transform": {
         "translate": {
-          "x": -160,
-          "y": -120
+          "x": -340.8761904761901,
+          "y": -235.88809523809527
         },
         "scale": 2
       },
@@ -1128,9 +1145,12 @@
       "selection": {
         "0": {
           "0": {},
+          "4": {},
+          "5": {},
           "6": {},
-          "7": {},
-          "8": {},
+          "7": {
+            "$selected": true
+          },
           "10": {},
           "12": {}
         }
@@ -1192,6 +1212,7 @@
   "searchMatchWholeWord": false,
   "replaceEnabled": false,
   "replaceText": "",
+  "pageRuntimeFrontFace": true,
   "breakpoints": {},
   "watchExpressions": [],
   "showComponentDescriptions": true,
