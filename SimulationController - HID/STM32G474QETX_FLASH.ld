@@ -44,9 +44,10 @@ _Min_Stack_Size = 0x400; /* required amount of stack */
 /* Memories definition */
 MEMORY
 {
-    FLASH (rx)    : ORIGIN = 0x08000000, LENGTH = 512K
-    RAM (xrw)     : ORIGIN = 0x20000000, LENGTH = 128K
-    QSPI_FLASH (r): ORIGIN = 0x90000000, LENGTH = 16M
+    FLASH (rx)          : ORIGIN = 0x08000000, LENGTH = 510K  /* 512K minus settings page */
+    SETTINGS_FLASH (r)  : ORIGIN = 0x0807F800, LENGTH = 2K    /* reserved for SystemSettings — no code goes here */
+    RAM (xrw)           : ORIGIN = 0x20000000, LENGTH = 128K
+    QSPI_FLASH (r)      : ORIGIN = 0x90000000, LENGTH = 16M
 }
 
 /* Sections */

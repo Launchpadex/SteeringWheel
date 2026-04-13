@@ -835,8 +835,8 @@ void create_screen_ffb_settings() {
         {
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.obj21 = obj;
-            lv_obj_set_pos(obj, 115, 179);
-            lv_obj_set_size(obj, 93, 16);
+            lv_obj_set_pos(obj, 103, 179);
+            lv_obj_set_size(obj, 115, 16);
             lv_label_set_long_mode(obj, LV_LABEL_LONG_CLIP);
             lv_obj_set_style_text_align(obj, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_label_set_text(obj, "");

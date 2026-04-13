@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-extern int16_t SelectedScreen;
+extern enum ScreensEnum SelectedScreen;
 extern int slider1_value;
 extern int slider2_value;
 extern int slider3_value;

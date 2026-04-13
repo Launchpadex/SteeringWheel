@@ -6,7 +6,7 @@
 #include "screens.h"
 #include "string.h"
 #include "lvgl_lcd.h"
-#include "FLASH_PAGE.h"  /* for system_settings */
+#include "flash_settings.h"
 
 static char calibration_status[30] = {0};
 static char force_feedback_status[100] = { 0 };
@@ -14,7 +14,7 @@ char real_samling_frequency_hz[100] = { 0 };
 char frequencies[100] = { 0 };
 char axis_min_max[250] = { 0 };
 char deadzone_char[10] = { 0 };
-char ffb_settings[100] = { 0 };
+char ffb_settings[300] = { 0 };
 
 int32_t selected_frequency_position;
 bool ffb_state;
@@ -218,11 +218,11 @@ void set_var_selected_frequency_position(int32_t value) {
     selected_frequency_position = value;
 }
 
-bool get_var_ffb_state() {
+int32_t get_var_ffb_state() {
     return ffb_state;
 }
 
-void set_var_ffb_state(bool value) {
+void set_var_ffb_state(int32_t value) {
     ffb_state = value;
 }
 

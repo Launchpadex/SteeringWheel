@@ -1,8 +1,7 @@
 {
   "navigation": {
     "selectedUserPageObject": "[UI.eez-project]:/userPages/2",
-    "selectedActionObject": "[UI.eez-project]:/actions/-1",
-    "selectedGlobalVariableObject": "[UI.eez-project]:/variables/globalVariables/53",
+    "selectedGlobalVariableObject": "[UI.eez-project]:/variables/globalVariables/46",
     "subnavigationSelectedItems": {
       "variables-tab/sub-navigation/selected-item": "Global"
     }
@@ -215,18 +214,6 @@
                     "permanent": true
                   },
                   "icon": "svg:page"
-                },
-                {
-                  "type": "tab",
-                  "id": "#420ec24e-c2c8-4305-817a-afccbad794c2",
-                  "name": "Settings",
-                  "component": "editor",
-                  "config": {
-                    "objectPath": "[UI.eez-project]:/settings",
-                    "subObjectPath": "[UI.eez-project]:/settings",
-                    "permanent": false
-                  },
-                  "icon": "material:settings"
                 },
                 {
                   "type": "tab",
@@ -1049,9 +1036,7 @@
     "[UI.eez-project]:/userPages/2[flow-state]": {
       "selection": {
         "0": {
-          "1": {
-            "$selected": true
-          },
+          "1": {},
           "12": {}
         }
       },

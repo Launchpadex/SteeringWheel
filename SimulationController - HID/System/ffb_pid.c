@@ -8,8 +8,9 @@
 #include <string.h>
 #include "stm32g4xx_hal.h"  /* for HAL_GetTick() */
 #include "Inc/InputCollection.h"  /* for MAX_AXES */
-#include "Inc/FLASH_PAGE.h"  /* for SystemSettings */
+#include "Inc/flash_settings.h"  /* for SystemSettings */
 #include <stdlib.h>  /* for labs */
+#include "vesc_uart.h" /*for vesc motor control*/
 
 /* Extern system settings */
 extern SystemSettings system_settings;
@@ -102,7 +103,7 @@ int32_t FFB_CalculateSpeed(uint8_t axis_id, int32_t current_pos, uint32_t curren
     int32_t dt = (int32_t)(current_time_ms - state->prev_pos_time);
     if (dt <= 0) return state->curr_speed;
 
-    int32_t speed = ((current_pos - state->prev_pos) * 1000) / dt;  // speed in pos/s
+    int32_t speed = (current_pos - state->prev_pos) * 10 / dt;  // speed in pos/100ms, keeps range sane for effect math
 
     state->prev_pos = current_pos;
     state->prev_pos_time = current_time_ms;
@@ -129,7 +130,7 @@ int32_t FFB_CalculateAccel(uint8_t axis_id, int32_t current_speed, uint32_t curr
     int32_t dt = (int32_t)(current_time_ms - state->prev_speed_time);
     if (dt <= 0) return 0;
 
-    int32_t accel = ((current_speed - state->prev_speed) * 1000) / dt;  // accel in pos/s²
+    int32_t accel = (current_speed - state->prev_speed) * 10 / dt;  // accel in same units/100ms
 
     return accel;
 }
@@ -474,20 +475,18 @@ int32_t FFB_GetForce(int32_t position, int32_t speed, int32_t accel, uint32_t cu
     force = force * gDeviceGain / 255;
     force = ConstrainEffect(force);
 
-    /* Scale force to current in mA */
-    int32_t current_mA = (force * system_settings.ffb_gain * system_settings.ffb_max_current_mA) / (32767 * 100);
+    /* Scale force to current in mA — int64_t prevents overflow at high currents */
+    int32_t current_mA = (int32_t)((int64_t)force * system_settings.ffb_gain * system_settings.ffb_max_current_mA / (32767LL * 100));
 
     return current_mA;
 }
 
 /* ------------------------------------------------------------------ */
-/*  Motor output helper - replace pins/timer with your hardware setup    */
+/*  Set Motor Current */
 /* ------------------------------------------------------------------ */
 
 void FFB_SetMotorCurrent(int32_t current_mA)
 {
-    /* Placeholder for VESC current control */
-    /* current_mA: desired motor current in mA, negative for reverse */
     /* Clamp to max current from settings */
     if (current_mA > system_settings.ffb_max_current_mA) {
         current_mA = system_settings.ffb_max_current_mA;
@@ -495,7 +494,6 @@ void FFB_SetMotorCurrent(int32_t current_mA)
         current_mA = -system_settings.ffb_max_current_mA;
     }
 
-    /* TODO: Send current command to VESC */
-    /* For now, just print or do nothing */
-    (void)current_mA;  /* Suppress unused warning */
+    //Send Current to VESC
+    vesc_set_current(current_mA / 1000.0f);
 }

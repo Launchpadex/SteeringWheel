@@ -8,8 +8,7 @@
 #include "main.h"
 #include "stdbool.h"
 #include "InputCollection.h"
-#include "FLASH_PAGE.h"
-#include "SaveUserData.h"
+#include "flash_settings.h"
 #include "lvgl_lcd.h"
 
 
@@ -17,7 +16,7 @@ extern TIM_HandleTypeDef htim8;
 extern TIM_HandleTypeDef htim4;
 extern TIM_HandleTypeDef htim2;
 
-int16_t SelectedScreen = 0;
+enum ScreensEnum SelectedScreen = SCREEN_ID_MAIN;
 int slider1_value = 0;
 int slider2_value = 0;
 int slider3_value = 0;
@@ -94,37 +93,37 @@ void action_change_deadzone(lv_event_t * e){
 #pragma region SwitchScreens
 void action_switch_to_main_screen(lv_event_t *e) {
 	loadScreen(SCREEN_ID_MAIN);
-	SelectedScreen = 1;
+	SelectedScreen = SCREEN_ID_MAIN;
 }
 
 void action_switch_to_sensor_status(lv_event_t *e) {
     loadScreen(SCREEN_ID_SENSOR_STATUS);
-    SelectedScreen = 6;
+    SelectedScreen = SCREEN_ID_SENSOR_STATUS;
 }
 
 void action_switch_to_select_game(lv_event_t *e) {
 	loadScreen(SCREEN_ID_SELECT_GAME);
-	SelectedScreen = 7;
+	SelectedScreen = SCREEN_ID_SELECT_GAME;
 }
 
 void action_switch_to_farming_simulator25(lv_event_t *e) {
 	loadScreen(SCREEN_ID_FARMING_SIMULATOR2025);
-	SelectedScreen = 8;
+	SelectedScreen = SCREEN_ID_FARMING_SIMULATOR2025;
 }
 
 void action_switch_to_settings(lv_event_t * e){
     loadScreen(SCREEN_ID_SETTINGS);
-    SelectedScreen = 2;
+    SelectedScreen = SCREEN_ID_SETTINGS;
 }
 
 void action_switch_to_calibration(lv_event_t * e){
     loadScreen(SCREEN_ID_CALIBRATION);
-    SelectedScreen = 4;
+    SelectedScreen = SCREEN_ID_CALIBRATION;
 }
 
 void action_switch_to_ffb_settings_screen(lv_event_t * e){
     loadScreen(SCREEN_ID_FFB_SETTINGS);
-    SelectedScreen = 3;
+    SelectedScreen = SCREEN_ID_FFB_SETTINGS;
     int32_t selected = get_var_ffb_settings_selected();
     if (objects.ffb_settings_selector) {
         lv_dropdown_set_selected(objects.ffb_settings_selector, selected);
@@ -136,7 +135,7 @@ void action_switch_to_ffb_settings_screen(lv_event_t * e){
 void action_start_calibration(lv_event_t *e) {
 	Inputs_StartCalibration();
 	loadScreen(SCREEN_ID_CALIBRATION_INDICATION);
-	SelectedScreen = 6;
+	SelectedScreen = SCREEN_ID_CALIBRATION_INDICATION;
 }
 
 void action_stop_calibration(lv_event_t *e) {
@@ -149,7 +148,7 @@ void action_stop_calibration(lv_event_t *e) {
 	set_var_misko_joy_calib(false);
 
 	loadScreen(SCREEN_ID_CALIBRATION);
-	SelectedScreen = 5;
+	SelectedScreen = SCREEN_ID_CALIBRATION;
 
 	set_var_calibration_status("Calibration stopped");
 }

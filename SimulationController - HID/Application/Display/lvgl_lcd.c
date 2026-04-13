@@ -21,10 +21,10 @@
 
 /* External variables */
 extern char ffb_settings[100];
-#include "misko_touch.h"
+#include "touch_driver.h"
 #include "tim.h"
 #include "vars.h"
-#include "FLASH_PAGE.h"
+#include "flash_settings.h"
 #include "screens.h"
 
 /* Static Variables ----------------------------------------------------------*/
@@ -138,7 +138,7 @@ uint32_t get_selector_position_from_frequency(int32_t frequency) {
 
 /* Format all FFB settings into string */
 const char* format_ffb_settings_string(void) {
-    static char temp_buffer[100];
+    static char temp_buffer[300];
     snprintf(temp_buffer, sizeof(temp_buffer),
             "Gain: %ld%%\n"
             "MaxCurrent: %ldmA\n"
