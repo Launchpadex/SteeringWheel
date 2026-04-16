@@ -7,6 +7,7 @@
 extern "C" {
 #endif
 
+#include "screens.h"
 extern enum ScreensEnum SelectedScreen;
 extern int slider1_value;
 extern int slider2_value;
@@ -20,51 +21,9 @@ extern int deadzone;
 
 extern void Set_Brightness(uint8_t brightness);
 void Set_Sampling_Frequency(int32_t frequency_hz);
-extern void action_switch_to_sensor_status(lv_event_t * e);
-extern void action_switch_to_main_screen(lv_event_t * e);
-extern void action_switch_to_select_game(lv_event_t * e);
-extern void action_switch_to_settings(lv_event_t * e);
-extern void action_switch_to_calibration(lv_event_t * e);
-extern void action_switch_to_farming_simulator25(lv_event_t * e);
-extern void action_fs25_slider1_value(lv_event_t * e);
-extern void action_fs25_slider2_value(lv_event_t * e);
-extern void action_fs25_slider3_value(lv_event_t * e);
-extern void action_fs25_slider4_value(lv_event_t * e);
-extern void action_fs25_button1_clicked(lv_event_t * e);
-extern void action_fs25_button2_clicked(lv_event_t * e);
-extern void action_fs25_button3_clicked(lv_event_t * e);
-extern void action_fs25_button4_clicked(lv_event_t * e);
-extern void action_fs25_switch1_checked(lv_event_t * e);
-extern void action_fs25_switch2_checked(lv_event_t * e);
-extern void action_fs25_switch3_checked(lv_event_t * e);
-extern void action_fs25_switch4_checked(lv_event_t * e);
-extern void action_fs25_button1_released(lv_event_t * e);
-extern void action_fs25_button2_released(lv_event_t * e);
-extern void action_fs25_button3_released(lv_event_t * e);
-extern void action_fs25_button4_released(lv_event_t * e);
-extern void action_fs25_switch1_unchecked(lv_event_t * e);
-extern void action_fs25_switch2_unchecked(lv_event_t * e);
-extern void action_fs25_switch3_unchecked(lv_event_t * e);
-extern void action_fs25_switch4_unchecked(lv_event_t * e);
-extern void action_refresh_latency_changed(lv_event_t * e);
-extern void action_start_calibration(lv_event_t * e);
-extern void action_stop_calibration(lv_event_t * e);
-extern void action_change_screen_brightness(lv_event_t * e);
-extern void action_save_settings(lv_event_t * e);
-extern void action_ffb_off(lv_event_t * e);
-extern void action_ffb_on(lv_event_t * e);
-extern void action_set_wheel_center(lv_event_t * e);
-extern void action_change_sampling_frequency(lv_event_t * e);
-extern void action_reset_calibration_values(lv_event_t * e);
-extern void action_change_deadzone(lv_event_t * e);
-extern void action_switch_to_ffb_settings_screen(lv_event_t * e);
-extern void action_ffb_setting_minus1(lv_event_t * e);
-extern void action_ffb_setting_plus1(lv_event_t * e);
-extern void action_ffb_setting_minus10(lv_event_t * e);
-extern void action_ffb_setting_plus10(lv_event_t * e);
-extern void action_ffb_setting_minus100(lv_event_t * e);
-extern void action_ffb_setting_plus100(lv_event_t * e);
-extern void action_ffb_settings_ok(lv_event_t * e);
+extern void update_sensor_flow_vars(void);
+extern void action_btn_increase_decrease_handler(lv_event_t * e);
+extern void action_ffb_setting_selected(lv_event_t * e);
 
 
 #ifdef __cplusplus

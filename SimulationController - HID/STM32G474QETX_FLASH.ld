@@ -79,11 +79,17 @@ SECTIONS
   } >FLASH
 
   /* Constant data into "FLASH" Rom type memory */
+  /* Font bitmaps, eez-flow data and ui assets go to QSPI — excluded here.
+     They are only accessed after CSP_QSPI_EnableMemoryMappedMode() in main(). */
   .rodata :
   {
     . = ALIGN(4);
-    *(.rodata)         /* .rodata sections (constants, strings, etc.) */
-    *(.rodata*)        /* .rodata* sections (constants, strings, etc.) */
+    *(EXCLUDE_FILE(*lv_font_montserrat_*.o
+                   ./Application/ui/eez-flow.o
+                   ./Application/ui/ui.o) .rodata)
+    *(EXCLUDE_FILE(*lv_font_montserrat_*.o
+                   ./Application/ui/eez-flow.o
+                   ./Application/ui/ui.o) .rodata*)
     . = ALIGN(4);
   } >FLASH
 
@@ -188,6 +194,9 @@ SECTIONS
   .extflashSection :
   {
     *(.extflash*)
+    *lv_font_montserrat_*.o          (.rodata .rodata*)
+    ./Application/ui/eez-flow.o      (.rodata .rodata*)
+    ./Application/ui/ui.o            (.rodata .rodata*)
   } > QSPI_FLASH
   
   .ARM.attributes 0 : { *(.ARM.attributes) }

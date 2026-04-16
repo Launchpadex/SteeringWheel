@@ -183,13 +183,14 @@ void lvgl_ui_init(){
 	snprintf(temp, sizeof(temp), "%d", deadzone);
 	set_var_deadzone_char(temp);
 	set_var_ffb_settings(format_ffb_settings_string());
-	lv_bar_set_range(objects.status_wheel, system_settings.axis_min[0], system_settings.axis_max[0]);
-	lv_bar_set_range(objects.status_throttle, system_settings.axis_min[1], system_settings.axis_max[1]);
-	lv_bar_set_range(objects.status_brake, system_settings.axis_min[2], system_settings.axis_max[2]);
-	lv_bar_set_range(objects.status_clutch, system_settings.axis_min[3], system_settings.axis_max[3]);
-	lv_bar_set_range(objects.status_lh_x, system_settings.axis_min[4], system_settings.axis_max[4]);
-	lv_bar_set_range(objects.status_lh_y, system_settings.axis_min[5], system_settings.axis_max[5]);
-	lv_bar_set_range(objects.status_lh_slider, system_settings.axis_min[6], system_settings.axis_max[6]);
-	lv_bar_set_range(objects.status_misko_x, system_settings.axis_min[7], system_settings.axis_max[7]);
-	lv_bar_set_range(objects.status_misko_y, system_settings.axis_min[8], system_settings.axis_max[8]);
+    /* Bars show mapped values 0-65535 — fixed range, independent of calibration */
+    lv_bar_set_range(objects.status_wheel,     0, 65535);
+    lv_bar_set_range(objects.status_throttle,  0, 65535);
+    lv_bar_set_range(objects.status_brake,     0, 65535);
+    lv_bar_set_range(objects.status_clutch,    0, 65535);
+    lv_bar_set_range(objects.status_lh_x,      0, 65535);
+    lv_bar_set_range(objects.status_lh_y,      0, 65535);
+    lv_bar_set_range(objects.status_lh_slider, 0, 65535);
+    lv_bar_set_range(objects.status_misko_x,   0, 65535);
+    lv_bar_set_range(objects.status_misko_y,   0, 65535);
 }

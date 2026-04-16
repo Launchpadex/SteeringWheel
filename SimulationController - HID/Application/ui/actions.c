@@ -27,6 +27,10 @@ int8_t FS25_Button_States[4];
 int8_t FS25_Switch_States[4];
 
 extern SystemSettings system_settings;
+extern int32_t setting_value;
+
+static bool is_holding = false;
+static uint32_t time_pressed_start = 0;
 
 #pragma region Settings
 void Set_Brightness(uint8_t brightness) {
@@ -51,14 +55,14 @@ void action_change_screen_brightness(lv_event_t * e){
 
 // Timer callback function
 static void hide_popup_timer_cb(lv_timer_t * timer) {
-    lv_obj_add_flag(objects.settings_saved_popup, LV_OBJ_FLAG_HIDDEN);
+    //lv_obj_add_flag(objects.settings_saved_popup, LV_OBJ_FLAG_HIDDEN);
     lv_timer_del(timer); // Delete timer after execution
 }
 
 void action_save_settings(lv_event_t * e) {
     system_settings.frequency = (uint32_t)get_selector_position_to_frequency();
-    system_settings.brightness = (int32_t)get_var_brightness();
-    system_settings.deadzone = (int32_t)get_var_deadzone();
+    //system_settings.brightness = (int32_t)get_var_brightness();
+    //system_settings.deadzone = (int32_t)get_var_deadzone();
     Flash_Write_All_Settings(FLASH_PAGE_ADDRESS, &system_settings);
 
     Flash_Read_All_Settings(FLASH_PAGE_ADDRESS, &system_settings);
@@ -66,7 +70,7 @@ void action_save_settings(lv_event_t * e) {
     Set_Sampling_Frequency(system_settings.frequency);
     Set_Brightness(system_settings.brightness);
 
-    lv_obj_clear_flag(objects.settings_saved_popup, LV_OBJ_FLAG_HIDDEN);
+    //lv_obj_clear_flag(objects.settings_saved_popup, LV_OBJ_FLAG_HIDDEN);
 
     // Create one-shot timer for 1000ms to hide popup and re-enable input
     lv_timer_create(hide_popup_timer_cb, 1000, NULL);
@@ -85,51 +89,11 @@ void action_change_deadzone(lv_event_t * e){
 	deadzone = get_var_deadzone();
 	char temp[16];
 	snprintf(temp, sizeof(temp), "%d", deadzone);
-	set_var_deadzone_char(temp);
+	//set_var_deadzone_char(temp);
 }
 
 #pragma endregion
 
-#pragma region SwitchScreens
-void action_switch_to_main_screen(lv_event_t *e) {
-	loadScreen(SCREEN_ID_MAIN);
-	SelectedScreen = SCREEN_ID_MAIN;
-}
-
-void action_switch_to_sensor_status(lv_event_t *e) {
-    loadScreen(SCREEN_ID_SENSOR_STATUS);
-    SelectedScreen = SCREEN_ID_SENSOR_STATUS;
-}
-
-void action_switch_to_select_game(lv_event_t *e) {
-	loadScreen(SCREEN_ID_SELECT_GAME);
-	SelectedScreen = SCREEN_ID_SELECT_GAME;
-}
-
-void action_switch_to_farming_simulator25(lv_event_t *e) {
-	loadScreen(SCREEN_ID_FARMING_SIMULATOR2025);
-	SelectedScreen = SCREEN_ID_FARMING_SIMULATOR2025;
-}
-
-void action_switch_to_settings(lv_event_t * e){
-    loadScreen(SCREEN_ID_SETTINGS);
-    SelectedScreen = SCREEN_ID_SETTINGS;
-}
-
-void action_switch_to_calibration(lv_event_t * e){
-    loadScreen(SCREEN_ID_CALIBRATION);
-    SelectedScreen = SCREEN_ID_CALIBRATION;
-}
-
-void action_switch_to_ffb_settings_screen(lv_event_t * e){
-    loadScreen(SCREEN_ID_FFB_SETTINGS);
-    SelectedScreen = SCREEN_ID_FFB_SETTINGS;
-    int32_t selected = get_var_ffb_settings_selected();
-    if (objects.ffb_settings_selector) {
-        lv_dropdown_set_selected(objects.ffb_settings_selector, selected);
-    }
-}
-#pragma endregion
 
 #pragma region Calibration
 void action_start_calibration(lv_event_t *e) {
@@ -206,66 +170,6 @@ static void ffb_set_current_value(int32_t value) {
     update_var_setting_value(value);
 }
 
-/* Adjustment buttons */
-void action_ffb_setting_minus1(lv_event_t * e) {
-    int32_t value = ffb_get_current_value();
-    ffb_set_current_value(value - 1);
-    int32_t new_value = ffb_get_current_value();
-    
-    char temp[20];
-    snprintf(temp, sizeof(temp), "%ld", new_value);
-    lv_label_set_text(objects.obj21, temp);
-}
-
-void action_ffb_setting_plus1(lv_event_t * e) {
-    int32_t value = ffb_get_current_value();
-    ffb_set_current_value(value + 1);
-    int32_t new_value = ffb_get_current_value();
-    
-    char temp[20];
-    snprintf(temp, sizeof(temp), "%ld", new_value);
-    lv_label_set_text(objects.obj21, temp);
-}
-
-void action_ffb_setting_minus10(lv_event_t * e) {
-    int32_t value = ffb_get_current_value();
-    ffb_set_current_value(value - 10);
-    int32_t new_value = ffb_get_current_value();
-    
-    char temp[20];
-    snprintf(temp, sizeof(temp), "%ld", new_value);
-    lv_label_set_text(objects.obj21, temp);
-}
-
-void action_ffb_setting_plus10(lv_event_t * e) {
-    int32_t value = ffb_get_current_value();
-    ffb_set_current_value(value + 10);
-    int32_t new_value = ffb_get_current_value();
-    
-    char temp[20];
-    snprintf(temp, sizeof(temp), "%ld", new_value);
-    lv_label_set_text(objects.obj21, temp);
-}
-
-void action_ffb_setting_minus100(lv_event_t * e) {
-    int32_t value = ffb_get_current_value();
-    ffb_set_current_value(value - 100);
-    int32_t new_value = ffb_get_current_value();
-    
-    char temp[20];
-    snprintf(temp, sizeof(temp), "%ld", new_value);
-    lv_label_set_text(objects.obj21, temp);
-}
-
-void action_ffb_setting_plus100(lv_event_t * e) {
-    int32_t value = ffb_get_current_value();
-    ffb_set_current_value(value + 100);
-    int32_t new_value = ffb_get_current_value();
-    
-    char temp[20];
-    snprintf(temp, sizeof(temp), "%ld", new_value);
-    lv_label_set_text(objects.obj21, temp);
-}
 
 /* OK button - save FFB settings and return to main */
 void action_ffb_settings_ok(lv_event_t * e) {
@@ -276,6 +180,51 @@ void action_ffb_settings_ok(lv_event_t * e) {
     Flash_Read_All_Settings(FLASH_PAGE_ADDRESS, &system_settings);
     /* Update formatted settings string */
     set_var_ffb_settings(format_ffb_settings_string());
+}
+
+void action_ffb_setting_selected(lv_event_t * e){
+    setting_value = ffb_get_current_value();
+    update_var_setting_value(setting_value);
+}
+
+void action_btn_increase_decrease_handler(lv_event_t * e){
+	lv_event_code_t event_type = lv_event_get_code(e);
+	lv_obj_t * btn = lv_event_get_target(e);
+	int8_t direction = 0;
+	uint32_t time_pressed = 0;
+	int32_t step = 1;
+
+	if (btn == objects.increase_btn){
+		direction = 1;
+	} else if (btn == objects.decrease_btn){
+		direction = -1;
+	} else {
+		return;
+	}
+
+	if (event_type == LV_EVENT_CLICKED){
+		setting_value += direction;
+		ffb_set_current_value(setting_value);
+	} else if (event_type == LV_EVENT_LONG_PRESSED){
+		time_pressed_start = lv_tick_get();
+		is_holding = true;
+	} else if(event_type == LV_EVENT_LONG_PRESSED_REPEAT){
+		if(!is_holding) return;
+
+		time_pressed = lv_tick_elaps(time_pressed_start);
+
+		// Acceleration based on hold duration
+		if      (time_pressed > 2500) step = 50;
+		else if (time_pressed > 1600) step = 20;
+		else if (time_pressed > 1000) step = 10;
+		else if (time_pressed > 600)  step = 5;
+		else if (time_pressed > 300)  step = 2;
+
+		setting_value += step * direction;
+		ffb_set_current_value(setting_value);
+	} else if (event_type == LV_EVENT_RELEASED) {
+		is_holding = false;
+	}
 }
 
 

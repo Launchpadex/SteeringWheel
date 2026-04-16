@@ -166,7 +166,6 @@ int main(void)
 
   HAL_Delay(100);
   /* Initialize QSPI */
-
   if (CSP_QUADSPI_Init() != HAL_OK) Error_Handler();
   if (CSP_QSPI_EnableMemoryMappedMode() != HAL_OK) Error_Handler();
 
@@ -202,7 +201,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     lv_timer_handler();
-    tick_screen_by_id(SelectedScreen);
+    ui_tick();
   }
 
   /* USER CODE END 3 */

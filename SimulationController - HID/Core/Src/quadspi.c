@@ -175,7 +175,6 @@ uint8_t CSP_QUADSPI_Init(void) {
 	}
 
 	if (QSPI_WriteEnable() != HAL_OK) {
-
 		return HAL_ERROR;
 	}
 
