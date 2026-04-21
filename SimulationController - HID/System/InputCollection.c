@@ -3,14 +3,12 @@
 =====================================================================*/
 
 #include "InputCollection.h"
-#include "FLASH_PAGE.h"
-#include "SaveUserData.h"
-#include "usbd_hid_custom_if.h"
-#include "usbd_hid_custom_if2.h"
+#include "flash_settings.h"
+#include "usbd_custom_hid_if.h"
 
 extern TIM_HandleTypeDef htim2, htim4;
 extern ADC_HandleTypeDef hadc1, hadc2, hadc4;
-extern USBD_HandleTypeDef hUsbDevice;
+extern USBD_HandleTypeDef hUsbDeviceFS;
 extern SystemSettings system_settings;
 
 /* DMA buffers – private to this file */
@@ -21,8 +19,7 @@ static uint16_t adc4_values[ADC4_BUFFERSIZE];
 /* Global */
 static CalibrationState g_calibration = {0};
 static RawInputs g_latest_inputs = {0};
-racing_report_1_t rep1 = {};
-racing_report_2_t rep2 = {};
+hid1_report_t hid1_rep = {};
 
 /*=====================================================================*/
 void Inputs_Init(void)
@@ -102,41 +99,27 @@ void Inputs_MapAxes(const RawInputs *raw, MappedAxes *mapped)
     for (int i = 0; i < MAX_AXES; ++i)
     {
         uint32_t raw_val = r[i];
-        uint32_t min = (uint32_t)system_settings.axis_min[i];
-        uint32_t max = (uint32_t)system_settings.axis_max[i];
-        uint32_t range = max - min;
+        uint32_t min     = system_settings.axis_min[i];
+        uint32_t max     = system_settings.axis_max[i];
+        uint32_t range   = max - min;
 
-        int32_t output;  // can stay signed for storage compatibility
+        int32_t output;
 
         if (raw_val <= min)
-        {
             output = 0;
-        }
         else if (raw_val >= max)
-        {
             output = 65534;
-        }
         else if (range == 0)
-        {
-            output = 0;  // safety – invalid calibration
-        }
+            output = 0;
         else
-        {
+            output = (int32_t)((uint64_t)(raw_val - min) * 65534ULL / range);
 
-            uint64_t temp = (uint64_t)(raw_val - min) * 65534ULL;
-            temp /= range;                 // now in 0 … 65534
-
-            output = (int32_t)temp;
-        }
-
-        uint16_t range_middle      = INT16_MAX;
-        uint16_t half_deadzone     = (int16_t)(system_settings.deadzone / 2);
-
-        uint16_t deadzone_low  = range_middle - half_deadzone;
-        uint16_t deadzone_high = range_middle + half_deadzone;
-
-        if (output >= deadzone_low && output <= deadzone_high) {
-            output = (INT16_MAX);
+        if (system_settings.axis_deadzone[i] > 0) {
+            uint16_t half_dz = (uint16_t)(system_settings.axis_deadzone[i] / 2);
+            uint16_t dz_low  = (uint16_t)INT16_MAX - half_dz;
+            uint16_t dz_high = (uint16_t)INT16_MAX + half_dz;
+            if (output >= dz_low && output <= dz_high)
+                output = INT16_MAX;
         }
 
         mapped->values[i] = (uint16_t)output;
@@ -147,29 +130,17 @@ void Inputs_MapAxes(const RawInputs *raw, MappedAxes *mapped)
 
 void Inputs_BuildAndSendReport(const MappedAxes *mapped, uint16_t button_mask_16bit)
 {
-    // Interface 1
-    rep1.report_id = (uint8_t)1;
-    rep1.steering = (uint16_t)mapped->values[AXIS_WHEEL];
-    rep1.throttle = (uint16_t)mapped->values[AXIS_THROTTLE];
-    rep1.brake    = (uint16_t)mapped->values[AXIS_BRAKE];
-    rep1.clutch   = (uint16_t)mapped->values[AXIS_CLUTCH];
-    rep1.x_axis   = (uint16_t)mapped->values[AXIS_LH_X];
-    rep1.y_axis   = (uint16_t)mapped->values[AXIS_LH_Y];
-    rep1.slider   = (uint16_t)mapped->values[AXIS_LH_SLIDER];
-    rep1.buttons  = button_mask_16bit;
+    hid1_rep.report_id = 4;
+    hid1_rep.steering = mapped->values[AXIS_WHEEL];
+    hid1_rep.throttle = mapped->values[AXIS_THROTTLE];
+    hid1_rep.brake    = mapped->values[AXIS_BRAKE];
+    hid1_rep.clutch   = mapped->values[AXIS_CLUTCH];
+    hid1_rep.x_axis   = mapped->values[AXIS_LH_X];
+    hid1_rep.y_axis   = mapped->values[AXIS_LH_Y];
+    hid1_rep.slider   = mapped->values[AXIS_LH_SLIDER];
+    hid1_rep.buttons  = button_mask_16bit;
 
-    // Send Interface 1
-    USBD_CUSTOM_HID_SendReport(&hUsbDevice, (uint8_t*)&rep1, sizeof(rep1));
-
-    // Wait for Interface 1 to finish (proper polling) -- Still issues
-    //for(volatile uint32_t i = 0; i < 20000; i++);
-
-    // Interface 2
-    //rep2.report_id = (uint8_t)2;
-    //rep2.misko_x  = (uint16_t)mapped->values[AXIS_MISKO_X];
-    //rep2.misko_y  = (uint16_t)mapped->values[AXIS_MISKO_Y];
-
-    //USBD_CUSTOM_HID2_SendReport(&hUsbDevice, (uint8_t*)&rep2, sizeof(rep2));
+    USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, (uint8_t*)&hid1_rep, sizeof(hid1_rep));
 }
 
 

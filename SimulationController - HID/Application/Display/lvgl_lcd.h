@@ -21,9 +21,6 @@ void lvgl_init(void);
 void Set_Brightness(uint8_t brightness);
 void my_flush_cb(lv_display_t * display, const lv_area_t * area, uint8_t * px_map);
 void touchpad_read(lv_indev_t * indev, lv_indev_data_t * data);
-int32_t get_selector_position_to_frequency(void);
-uint32_t get_selector_position_from_frequency(int32_t frequency);
-const char* format_ffb_settings_string(void);
 void update_var_setting_value(int32_t value);
 
 void lvgl_ui_init(void);

@@ -1,7 +1,7 @@
 {
   "navigation": {
-    "selectedUserPageObject": "[UI.eez-project]:/userPages/2",
-    "selectedGlobalVariableObject": "[UI.eez-project]:/variables/globalVariables/46",
+    "selectedUserPageObject": "[UI.eez-project]:/userPages/0",
+    "selectedGlobalVariableObject": "[UI.eez-project]:/variables/globalVariables/54",
     "subnavigationSelectedItems": {
       "variables-tab/sub-navigation/selected-item": "Global"
     }
@@ -195,11 +195,11 @@
               "children": [
                 {
                   "type": "tab",
-                  "id": "#1674696d-235f-4035-a28b-87baf1b98ae4",
-                  "name": "FFBSettings",
+                  "id": "#4d556a6b-b7f4-4ab7-b068-e928c33fefb1",
+                  "name": "SensorStatus",
                   "component": "editor",
                   "config": {
-                    "objectPath": "[UI.eez-project]:/userPages/2",
+                    "objectPath": "[UI.eez-project]:/userPages/0",
                     "permanent": false
                   },
                   "icon": "svg:page"
@@ -214,40 +214,6 @@
                     "permanent": true
                   },
                   "icon": "svg:page"
-                },
-                {
-                  "type": "tab",
-                  "id": "#cb8a060c-5f39-46e6-9d18-dfa024628789",
-                  "name": "Readme",
-                  "component": "editor",
-                  "config": {
-                    "objectPath": "[UI.eez-project]:/readme",
-                    "permanent": false
-                  },
-                  "icon": {
-                    "type": "svg",
-                    "key": null,
-                    "ref": null,
-                    "props": {
-                      "width": "24",
-                      "height": "24",
-                      "fill": "none",
-                      "viewBox": "0 0 24 24",
-                      "children": {
-                        "type": "path",
-                        "key": null,
-                        "ref": null,
-                        "props": {
-                          "clipRule": "evenodd",
-                          "d": "M4 5.5h5c1.1046 0 2 .8954 2 2v9c0 .5523-.4477 1-1 1H4c-.5523 0-1-.4477-1-1v-10c0-.5523.4477-1 1-1Zm10 14a2.9967 2.9967 0 0 1-1-.1707V19.5c0 .5523-.4477 1-1 1s-1-.4477-1-1v-.1707a2.9967 2.9967 0 0 1-1 .1707H4c-1.6568 0-3-1.3431-3-3v-10c0-1.6569 1.3432-3 3-3h5c1.1947 0 2.2671.5238 3 1.3542.7329-.8304 1.8053-1.3542 3-1.3542h5c1.6569 0 3 1.3431 3 3v10c0 1.6569-1.3431 3-3 3h-6Zm-1-12v9c0 .5523.4477 1 1 1h6c.5523 0 1-.4477 1-1v-10c0-.5523-.4477-1-1-1h-5c-1.1046 0-2 .8954-2 2Zm-8 0h4v2H5v-2Zm10 0h4v2h-4v-2Zm4 3h-4v2h4v-2Zm-14 0h4v2H5v-2Zm14 3h-4v2h4v-2Zm-14 0h4v2H5v-2Z",
-                          "fill": "currentColor",
-                          "fillRule": "evenodd"
-                        },
-                        "_owner": null
-                      }
-                    },
-                    "_owner": null
-                  }
                 }
               ],
               "active": true
@@ -1017,12 +983,14 @@
   "objects": {
     "[UI.eez-project]:/userPages/0[flow-state]": {
       "selection": {
-        "0": {}
+        "0": {
+          "2": {}
+        }
       },
       "transform": {
         "translate": {
-          "x": -160,
-          "y": -120
+          "x": -340,
+          "y": -238.10623931884766
         },
         "scale": 2
       },
@@ -1036,14 +1004,16 @@
     "[UI.eez-project]:/userPages/2[flow-state]": {
       "selection": {
         "0": {
-          "1": {},
-          "12": {}
+          "0": {},
+          "2": {},
+          "3": {},
+          "4": {}
         }
       },
       "transform": {
         "translate": {
-          "x": -340.8761904761901,
-          "y": -235.88809523809527
+          "x": -160,
+          "y": -220
         },
         "scale": 2
       },
@@ -1075,9 +1045,7 @@
     "[UI.eez-project]:/userPages/4[flow-state]": {
       "selection": {
         "0": {
-          "2": {
-            "$selected": true
-          }
+          "2": {}
         }
       },
       "transform": {
@@ -1111,7 +1079,9 @@
       }
     },
     "[UI.eez-project]:/userPages/5[flow-state]": {
-      "selection": {},
+      "selection": {
+        "0": {}
+      },
       "transform": {
         "translate": {
           "x": -160,
@@ -1130,14 +1100,11 @@
       "selection": {
         "0": {
           "0": {},
-          "4": {},
-          "5": {},
-          "6": {},
-          "7": {
+          "2": {},
+          "3": {},
+          "4": {
             "$selected": true
-          },
-          "10": {},
-          "12": {}
+          }
         }
       },
       "transform": {
@@ -1203,7 +1170,7 @@
   "showComponentDescriptions": true,
   "logsPanelFilter": "all",
   "selectedStylePropertyName": "",
-  "lvglPart": "MAIN",
+  "lvglPart": "INDICATOR",
   "lvglState": "DEFAULT",
   "lvglExpandedPropertiesGroup": [
     "BACKGROUND",

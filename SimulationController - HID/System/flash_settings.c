@@ -32,7 +32,6 @@ static const SettingEntry scalar_settings[] = {
     SETTING(TLV_TYPE_BRIGHTNESS,        brightness,          50),
     SETTING(TLV_TYPE_FREQUENCY,         frequency,           1000),
     SETTING(TLV_TYPE_FFB,               ffb,                 0),
-    SETTING(TLV_TYPE_DEADZONE,          deadzone,            0),
     SETTING(TLV_TYPE_FFB_GAIN,          ffb_gain,            100),
     SETTING(TLV_TYPE_FFB_MAX_CURRENT,   ffb_max_current_mA,  15000),
     SETTING(TLV_TYPE_FFB_SPD_THRESHOLD, ffb_spd_threshold,   10),
@@ -111,8 +110,8 @@ uint32_t Flash_Write_Data(uint32_t StartAddress, uint64_t *Data, uint16_t number
  * --------------------------------------------------------------------------- */
 uint32_t Flash_Write_All_Settings(uint32_t StartAddress, SystemSettings *settings)
 {
-    // Buffer: axes use 4 words each, scalars use 2 words each, plus some margin
-    uint32_t tlv_buf[MAX_AXES * 4 + NUM_SCALAR_SETTINGS * 2 + 4];
+    // Buffer: axes use 4 words each, axis deadzones use 3 words each, scalars use 2 words each
+    uint32_t tlv_buf[MAX_AXES * 7 + NUM_SCALAR_SETTINGS * 2 + 4];
     uint32_t ptr = 0;
 
     // Axis array (special multi-word TLV)
@@ -121,6 +120,13 @@ uint32_t Flash_Write_All_Settings(uint32_t StartAddress, SystemSettings *setting
         tlv_buf[ptr++] = (uint32_t)(i + 1);
         tlv_buf[ptr++] = (uint32_t)settings->axis_min[i];
         tlv_buf[ptr++] = (uint32_t)settings->axis_max[i];
+    }
+
+    // Per-axis deadzone array
+    for (uint8_t i = 0; i < MAX_AXES; i++) {
+        tlv_buf[ptr++] = (TLV_TYPE_AXIS_DEADZONE << 16) | 8;
+        tlv_buf[ptr++] = (uint32_t)(i + 1);
+        tlv_buf[ptr++] = (uint32_t)settings->axis_deadzone[i];
     }
 
     // All scalar settings from table
@@ -180,6 +186,16 @@ uint32_t Flash_Read_All_Settings(uint32_t StartAddress, SystemSettings *settings
             continue;
         }
 
+        if (type == TLV_TYPE_AXIS_DEADZONE) {
+            if (length == 8) {
+                uint32_t id = *(__IO uint32_t *)addr; addr += 4;
+                if (id >= 1 && id <= MAX_AXES)
+                    settings->axis_deadzone[id-1] = *(__IO int32_t *)addr;
+                addr += 4;
+            } else { addr += length; }
+            continue;
+        }
+
         // Look up type in scalar table
         const SettingEntry *entry = NULL;
         for (size_t i = 0; i < NUM_SCALAR_SETTINGS; i++) {
@@ -198,33 +214,3 @@ uint32_t Flash_Read_All_Settings(uint32_t StartAddress, SystemSettings *settings
     return 0;
 }
 
-/* ---------------------------------------------------------------------------
- * High-level save helpers
- * --------------------------------------------------------------------------- */
-extern SystemSettings system_settings;
-
-uint32_t SaveSystemData(uint8_t type, int32_t value)
-{
-    // Find the setting in the table
-    for (size_t i = 0; i < NUM_SCALAR_SETTINGS; i++) {
-        if (scalar_settings[i].type == type) {
-            FIELD(&system_settings, scalar_settings[i]) = value;
-            system_settings.valid = 1;
-            return Flash_Write_All_Settings(FLASH_PAGE_ADDRESS, &system_settings);
-        }
-    }
-    return 2;  // type not found
-}
-
-int8_t SaveAxisData(uint32_t axis_id, int32_t min, int32_t max)
-{
-    if (axis_id < 1 || axis_id > MAX_AXES)
-        return 1;
-
-    system_settings.axis_min[axis_id - 1] = min;
-    system_settings.axis_max[axis_id - 1] = max;
-    if (axis_id > system_settings.num_axes)
-        system_settings.num_axes = axis_id;
-    system_settings.valid = 1;
-    return 0;
-}

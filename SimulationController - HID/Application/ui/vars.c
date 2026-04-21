@@ -7,21 +7,14 @@
 #include "string.h"
 #include "lvgl_lcd.h"
 #include "flash_settings.h"
+#include "ffb_pid.h"
+#include "flash_settings.h"
 
 static char calibration_status[30] = {0};
 static char force_feedback_status[100] = { 0 };
-char real_samling_frequency_hz[100] = { 0 };
-char frequencies[100] = { 0 };
 char axis_min_max[250] = { 0 };
-char deadzone_char[10] = { 0 };
-char ffb_settings[300] = { 0 };
 
-int32_t selected_frequency_position;
-bool ffb_state;
 int32_t brightness;
-int32_t deadzone;
-int32_t setting_value;
-int32_t ffb_settings_selected;
 char setting_value_str[20] = { 0 };
 
 
@@ -34,16 +27,6 @@ static bool l_joy_calib = false;
 static bool misko_joy_calib = false;
 //Calibration_variables
 
-
-#pragma region MainScreen
-const char *get_var_real_samling_frequency_hz() {
-    return real_samling_frequency_hz;
-}
-void set_var_real_samling_frequency_hz(const char *value) {
-    strncpy(real_samling_frequency_hz, value, sizeof(real_samling_frequency_hz) / sizeof(char));
-    real_samling_frequency_hz[sizeof(real_samling_frequency_hz) / sizeof(char) - 1] = 0;
-}
-#pragma endregion
 
 
 #pragma region Sensor_Status
@@ -76,6 +59,43 @@ void    set_var_lh_y(int32_t value)     { /* no direct write */ }
 
 int32_t get_var_lh_r(void)      { return Inputs_GetLatestSnapshot()->lh_slider; }  // Slider = rotary on left hand
 void    set_var_lh_r(int32_t value)     { /* no direct write */ }
+
+static int32_t bar_midpoint(lv_obj_t *bar) {
+    return (lv_bar_get_max_value(bar) + lv_bar_get_min_value(bar)) / 2;
+}
+
+/* Translate signed reading to bar position: midpoint + reading, clamped to bar range. */
+static int32_t bar_pos(lv_obj_t *bar, int32_t reading) {
+    int32_t lo  = lv_bar_get_min_value(bar);
+    int32_t hi  = lv_bar_get_max_value(bar);
+    int64_t pos = (int64_t)bar_midpoint(bar) + reading;
+    if (pos < lo) pos = lo;
+    if (pos > hi) pos = hi;
+    return (int32_t)pos;
+}
+
+int32_t get_var_ffb_force(void) {
+    int32_t mid = bar_midpoint(objects.status_ffb_force);
+    int32_t pos = bar_pos(objects.status_ffb_force, FFB_GetLastForce());
+    return pos > mid ? pos : mid;   /* always the upper bound */
+}
+int32_t get_var_ffb_force_start(void) {
+    int32_t mid = bar_midpoint(objects.status_ffb_force);
+    int32_t pos = bar_pos(objects.status_ffb_force, FFB_GetLastForce());
+    return pos < mid ? pos : mid;   /* always the lower bound */
+}
+void    set_var_ffb_force(int32_t v)           { }
+void    set_var_ffb_force_start(int32_t v)     { }
+
+int32_t get_var_wheel_speed(void)          { return bar_pos(objects.status_wheel_speed, FFB_GetLastSpeed()); }
+int32_t get_var_wheel_speed_start(void)    { return bar_midpoint(objects.status_wheel_speed); }
+void    set_var_wheel_speed(int32_t v)         { }
+void    set_var_wheel_speed_start(int32_t v)   { }
+
+int32_t get_var_wheel_accel(void)          { return bar_pos(objects.status_wheel_accel, FFB_GetLastAccel()); }
+int32_t get_var_wheel_accel_start(void)    { return bar_midpoint(objects.status_wheel_accel); }
+void    set_var_wheel_accel(int32_t v)         { }
+void    set_var_wheel_accel_start(int32_t v)   { }
 
 // =============================================================================
 // END OF ANALOG INPUTS
@@ -190,40 +210,13 @@ void set_var_axis_min_max(const char *value) {
 
 #pragma region Settings
 void set_var_force_feedback_status(const char *value) {
-    const char *state = (value && strcmp(value, "0") != 0) ? "FFB ON" : "FFB OFF";
-    strncpy(force_feedback_status, state, sizeof(force_feedback_status));
+    strncpy(force_feedback_status, value, sizeof(force_feedback_status));
     force_feedback_status[sizeof(force_feedback_status) - 1] = '\0';
     lv_label_set_text(objects.force_feedback_status_main, force_feedback_status);
 }
 
 const char *get_var_force_feedback_status() {
     return force_feedback_status;
-}
-
-
-const char *get_var_frequencies() {
-    return frequencies;
-}
-
-void set_var_frequencies(const char *value) {
-    strncpy(frequencies, value, sizeof(frequencies) / sizeof(char));
-    frequencies[sizeof(frequencies) / sizeof(char) - 1] = 0;
-}
-
-int32_t get_var_selected_frequency_position() {
-    return selected_frequency_position;
-}
-
-void set_var_selected_frequency_position(int32_t value) {
-    selected_frequency_position = value;
-}
-
-int32_t get_var_ffb_state() {
-    return ffb_state;
-}
-
-void set_var_ffb_state(int32_t value) {
-    ffb_state = value;
 }
 
 int32_t get_var_brightness() {
@@ -234,57 +227,53 @@ void set_var_brightness(int32_t value) {
     brightness = value;
 }
 
-int32_t get_var_deadzone(){
-	return deadzone;
+#pragma endregion
+
+#pragma region Settings
+
+static char settings_options[300] = { 0 };
+static int32_t settings_selected  = 0;
+
+const char *get_var_settings() { return settings_options; }
+void set_var_settings(const char *value) {
+    strncpy(settings_options, value, sizeof(settings_options));
+    settings_options[sizeof(settings_options) - 1] = '\0';
 }
 
-void set_var_deadzone(int32_t value){
-	deadzone = value;
-}
+int32_t get_var_settings_selected() { return settings_selected; }
+void set_var_settings_selected(int32_t value) { settings_selected = value; }
 
-const char *get_var_deadzone_char(){
-	return deadzone_char;
-}
-
-void set_var_deadzone_char(const char *value) {
-    strncpy(deadzone_char, value, sizeof(deadzone_char) / sizeof(char));
-    deadzone_char[sizeof(deadzone_char) / sizeof(char) - 1] = 0;
+const char *get_var_setting_value() { return setting_value_str; }
+void set_var_setting_value(const char *value) {
+    strncpy(setting_value_str, value, sizeof(setting_value_str));
+    setting_value_str[sizeof(setting_value_str) - 1] = '\0';
 }
 
 #pragma endregion
 
-#pragma region FFB_Settings
+#pragma region EEZ_Stubs
+/* Declared in EEZ-generated vars.h but unused — stubs prevent linker errors on regeneration. */
 
-const char *get_var_ffb_settings() {
-    return ffb_settings;
-}
-void set_var_ffb_settings(const char *value) {
-    strncpy(ffb_settings, value, sizeof(ffb_settings) / sizeof(char));
-    ffb_settings[sizeof(ffb_settings) / sizeof(char) - 1] = 0;
-}
+bool get_var_fs25_click1(void)  { return false; } void set_var_fs25_click1(bool v)  { }
+bool get_var_fs25_click2(void)  { return false; } void set_var_fs25_click2(bool v)  { }
+bool get_var_fs25_click3(void)  { return false; } void set_var_fs25_click3(bool v)  { }
+bool get_var_fs25_click4(void)  { return false; } void set_var_fs25_click4(bool v)  { }
+bool get_var_fs25_click_back(void) { return false; } void set_var_fs25_click_back(bool v) { }
 
+bool get_var_fs25_switch1(void) { return false; } void set_var_fs25_switch1(bool v) { }
+bool get_var_fs25_switch2(void) { return false; } void set_var_fs25_switch2(bool v) { }
+bool get_var_fs25_switch3(void) { return false; } void set_var_fs25_switch3(bool v) { }
+bool get_var_fs25_switch4(void) { return false; } void set_var_fs25_switch4(bool v) { }
 
-const char *get_var_setting_value() {
-    return setting_value_str;
-}
-void set_var_setting_value(const char *value) {
-    int32_t parsed = atoi(value);
-    if (parsed < 0) {
-        parsed = 0;
-    }
-    setting_value = parsed;
-    strncpy(setting_value_str, value, sizeof(setting_value_str));
-    setting_value_str[sizeof(setting_value_str) / sizeof(char) - 1] = 0;
-}
+int32_t get_var_fs25_slider1(void) { return 0; } void set_var_fs25_slider1(int32_t v) { }
+int32_t get_var_fs25_slider2(void) { return 0; } void set_var_fs25_slider2(int32_t v) { }
+int32_t get_var_fs25_slider3(void) { return 0; } void set_var_fs25_slider3(int32_t v) { }
+int32_t get_var_fs25_slider4(void) { return 0; } void set_var_fs25_slider4(int32_t v) { }
 
-
-
-int32_t get_var_ffb_settings_selected() {
-    return ffb_settings_selected;
-}
-void set_var_ffb_settings_selected(int32_t value) {
-    ffb_settings_selected = value;
-}
+static char stub_str[1] = "";
+const char *get_var_calibration_values(void)      { return stub_str; } void set_var_calibration_values(const char *v)      { }
+const char *get_var_frequencies(void)             { return stub_str; } void set_var_frequencies(const char *v)             { }
+int32_t     get_var_selected_frequency_position(void) { return 0;    } void set_var_selected_frequency_position(int32_t v) { }
 
 #pragma endregion
 

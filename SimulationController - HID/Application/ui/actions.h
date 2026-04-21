@@ -20,6 +20,7 @@ extern int deadzone;
 
 extern void Set_Brightness(uint8_t brightness);
 void Set_Sampling_Frequency(int32_t frequency_hz);
+void settings_init_display(void);
 extern void action_switch_to_sensor_status(lv_event_t * e);
 extern void action_switch_to_main_screen(lv_event_t * e);
 extern void action_switch_to_select_game(lv_event_t * e);
@@ -65,6 +66,7 @@ extern void action_ffb_setting_plus10(lv_event_t * e);
 extern void action_ffb_setting_minus100(lv_event_t * e);
 extern void action_ffb_setting_plus100(lv_event_t * e);
 extern void action_ffb_settings_ok(lv_event_t * e);
+extern void action_increase_decrease_setting_value(lv_event_t * e);
 
 
 #ifdef __cplusplus

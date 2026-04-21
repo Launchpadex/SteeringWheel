@@ -66,48 +66,24 @@ SystemSettings system_settings;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-uint32_t t_collect = 0;
-uint32_t t_map = 0;
-uint32_t t_usb = 0;
-uint32_t t_ffb = 0;
-int16_t current_mA= 0;
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-    if (htim == &htim2)
-    {
-        // --- profiling ---
-        CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-        DWT->CYCCNT = 0;
-        // -----------------
+    if (htim != &htim2) return;
 
-        static RawInputs  raw    = {0};
-        static MappedAxes mapped = {0};
+    static RawInputs  raw    = {0};
+    static MappedAxes mapped = {0};
 
-        DWT->CYCCNT = 0;
-        Inputs_CollectAll(&raw);
-        t_collect = DWT->CYCCNT;
+    uint32_t now = HAL_GetTick();
 
-        DWT->CYCCNT = 0;
-        Inputs_MapAxes(&raw, &mapped);
-        t_map = DWT->CYCCNT;
+    Inputs_CollectAll(&raw);
+    Inputs_MapAxes(&raw, &mapped);
+    Inputs_BuildAndSendReport(&mapped, raw.buttons);
 
-        DWT->CYCCNT = 0;
-        Inputs_BuildAndSendReport(&mapped, raw.buttons);
-        t_usb = DWT->CYCCNT;
-
-        DWT->CYCCNT = 0;
-        uint32_t current_time = HAL_GetTick();
-        int32_t position = (int32_t)mapped.values[AXIS_WHEEL];
-        int32_t speed = FFB_CalculateSpeed(AXIS_WHEEL, position, current_time);
-        int32_t accel = FFB_CalculateAccel(AXIS_WHEEL, speed, current_time);
-        current_mA = FFB_GetForce(position, speed, accel, current_time);
-        FFB_SetMotorCurrent(current_mA);
-        t_ffb = DWT->CYCCNT;
-
-        // cycles ÷ 170 = microseconds (170MHz clock)
-        // put a breakpoint here and inspect t_collect, t_map, t_usb, t_ffb
-        (void)t_collect; (void)t_map; (void)t_usb; (void)t_ffb;
-    }
+    int32_t position = (int32_t)mapped.values[AXIS_WHEEL];
+    int32_t speed    = FFB_CalculateSpeed(AXIS_WHEEL, position, now);
+    int32_t accel    = FFB_CalculateAccel(AXIS_WHEEL, speed, now);
+    FFB_SetMotorCurrent(FFB_GetForce(position, speed, accel, now));
 }
 
 
@@ -183,9 +159,6 @@ int main(void)
   //ADC, Encoder,
   Inputs_Init();
   HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
-
-  //Read Settings and set
-  Flash_Read_All_Settings(FLASH_PAGE_ADDRESS, &system_settings);
 
   Set_Sampling_Frequency(system_settings.frequency);
   Set_Brightness(system_settings.brightness);

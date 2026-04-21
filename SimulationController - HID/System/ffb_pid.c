@@ -7,8 +7,8 @@
 #include <stdio.h>
 #include <string.h>
 #include "stm32g4xx_hal.h"  /* for HAL_GetTick() */
-#include "Inc/InputCollection.h"  /* for MAX_AXES */
-#include "Inc/flash_settings.h"  /* for SystemSettings */
+#include "InputCollection.h"
+#include "flash_settings.h"
 #include <stdlib.h>  /* for labs */
 #include "vesc_uart.h" /*for vesc motor control*/
 
@@ -79,8 +79,16 @@ PIDBlockLoad_t       gNewEffectBlockLoad;
 static uint8_t       gDeviceGain = 255U;
 
 /* Axis state for speed/accel calculation */
-
 static AxisState_t gAxisStates[MAX_AXES] = {0};
+
+/* Last computed values — readable from UI without re-entering the ISR */
+static int32_t g_last_speed = 0;
+static int32_t g_last_accel = 0;
+static int32_t g_last_force = 0;
+
+int32_t FFB_GetLastSpeed(void) { return g_last_speed; }
+int32_t FFB_GetLastAccel(void) { return g_last_accel; }
+int32_t FFB_GetLastForce(void) { return g_last_force; }
 
 /* ------------------------------------------------------------------ */
 /* Speed and acceleration calculation functions */
@@ -113,6 +121,8 @@ int32_t FFB_CalculateSpeed(uint8_t axis_id, int32_t current_pos, uint32_t curren
     state->curr_speed = speed;
     state->curr_speed_time = current_time_ms;
 
+    state->filtered_speed = (state->filtered_speed * 9 + speed) / 10;
+    g_last_speed = state->filtered_speed;
     return speed;
 }
 
@@ -132,6 +142,8 @@ int32_t FFB_CalculateAccel(uint8_t axis_id, int32_t current_speed, uint32_t curr
 
     int32_t accel = (current_speed - state->prev_speed) * 10 / dt;  // accel in same units/100ms
 
+    state->filtered_accel = (state->filtered_accel * 9 + accel) / 10;
+    g_last_accel = state->filtered_accel;
     return accel;
 }
 
@@ -188,7 +200,10 @@ static int16_t InertiaEffect(int32_t acl, int16_t mag) {
 }
 
 static int16_t FrictionEffect(int32_t spd, int16_t mag) {
-    if (labs(spd) < system_settings.ffb_frc_threshold) return ConstrainEffect(-(int32_t)spd * mag * system_settings.ffb_friction_coef / (system_settings.ffb_frc_threshold * 32));
+    int32_t threshold = system_settings.ffb_frc_threshold;
+    if (threshold <= 0) return 0;
+    if (labs(spd) < threshold)
+        return ConstrainEffect(-(int32_t)spd * mag * system_settings.ffb_friction_coef / (threshold * 32));
     return ConstrainEffect(-(int32_t)mag * system_settings.ffb_friction_coef / 32 * (spd > 0 ? 1 : -1));
 }
 
@@ -478,6 +493,7 @@ int32_t FFB_GetForce(int32_t position, int32_t speed, int32_t accel, uint32_t cu
     /* Scale force to current in mA — int64_t prevents overflow at high currents */
     int32_t current_mA = (int32_t)((int64_t)force * system_settings.ffb_gain * system_settings.ffb_max_current_mA / (32767LL * 100));
 
+    g_last_force = current_mA;
     return current_mA;
 }
 

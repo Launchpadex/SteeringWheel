@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <stddef.h>
+#include <string.h>
 #include "lvgl.h"
 #include "actions.h"
 #include "screens.h"
@@ -10,11 +12,7 @@
 #include "InputCollection.h"
 #include "flash_settings.h"
 #include "lvgl_lcd.h"
-
-
-extern TIM_HandleTypeDef htim8;
-extern TIM_HandleTypeDef htim4;
-extern TIM_HandleTypeDef htim2;
+#include "tim.h"
 
 enum ScreensEnum SelectedScreen = SCREEN_ID_MAIN;
 int slider1_value = 0;
@@ -28,72 +26,114 @@ int8_t FS25_Switch_States[4];
 
 extern SystemSettings system_settings;
 
-#pragma region Settings
+/*=====================================================================*/
+/* Hardware control                                                    */
+/*=====================================================================*/
+
 void Set_Brightness(uint8_t brightness) {
-    // brightness: 0-100
     if (brightness > 100) brightness = 100;
-    uint32_t ccr1 = (brightness * 999) / 100; // Map 0-100 to 0-999
-    __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, ccr1);
+    __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, (brightness * 999) / 100);
 }
 
 void Set_Sampling_Frequency(int32_t frequency_hz) {
-    if (frequency_hz < 10)  frequency_hz = 10;
+    if (frequency_hz < 10)   frequency_hz = 10;
     if (frequency_hz > 1000) frequency_hz = 1000;
-
-    uint32_t arr = (100000 / frequency_hz) - 1;
-    __HAL_TIM_SET_AUTORELOAD(&htim2, arr);
-}
-void action_change_screen_brightness(lv_event_t * e){
-    lv_obj_t * slider = lv_event_get_target(e);
-    Screen_Brightness = lv_slider_get_value(slider);
-    Set_Brightness(Screen_Brightness);
+    __HAL_TIM_SET_AUTORELOAD(&htim2, (100000 / frequency_hz) - 1);
 }
 
-// Timer callback function
-static void hide_popup_timer_cb(lv_timer_t * timer) {
+void action_change_screen_brightness(lv_event_t *e) {
+    Screen_Brightness = lv_slider_get_value(lv_event_get_target(e));
+    Set_Brightness((uint8_t)Screen_Brightness);
+}
+
+/*=====================================================================*/
+/* Settings descriptor table                                           */
+/*=====================================================================*/
+
+typedef struct {
+    const char *name;
+    size_t      offset;
+    int32_t     min_val;
+    int32_t     max_val;
+} SettingDef;
+
+static const SettingDef g_settings[] = {
+    { "Brightness",       offsetof(SystemSettings, brightness),         0,   100   },
+    { "Sampling Freq",    offsetof(SystemSettings, frequency),           10,  1000  },
+    { "FFB Enable",       offsetof(SystemSettings, ffb),                0,   1     },
+    { "FFB Gain %",       offsetof(SystemSettings, ffb_gain),           0,   200   },
+    { "Max Current mA",   offsetof(SystemSettings, ffb_max_current_mA), 0,   30000 },
+    { "Speed Threshold",  offsetof(SystemSettings, ffb_spd_threshold),  0,   1000  },
+    { "Accel Threshold",  offsetof(SystemSettings, ffb_acl_threshold),  0,   1000  },
+    { "Friction Thresh",  offsetof(SystemSettings, ffb_frc_threshold),  0,   1000  },
+    { "Spring Coef",      offsetof(SystemSettings, ffb_spring_coef),    0,   500   },
+    { "Damper Coef",      offsetof(SystemSettings, ffb_damper_coef),    0,   500   },
+    { "Friction Coef",    offsetof(SystemSettings, ffb_friction_coef),  0,   500   },
+    { "Inertia Coef",     offsetof(SystemSettings, ffb_inertia_coef),   0,   500   },
+    { "Dz: Wheel",        offsetof(SystemSettings, axis_deadzone) + 0*sizeof(int32_t), 0, 32767 },
+    { "Dz: Throttle",     offsetof(SystemSettings, axis_deadzone) + 1*sizeof(int32_t), 0, 32767 },
+    { "Dz: Brake",        offsetof(SystemSettings, axis_deadzone) + 2*sizeof(int32_t), 0, 32767 },
+    { "Dz: Clutch",       offsetof(SystemSettings, axis_deadzone) + 3*sizeof(int32_t), 0, 32767 },
+    { "Dz: LH X",         offsetof(SystemSettings, axis_deadzone) + 4*sizeof(int32_t), 0, 32767 },
+    { "Dz: LH Y",         offsetof(SystemSettings, axis_deadzone) + 5*sizeof(int32_t), 0, 32767 },
+    { "Dz: LH Slider",    offsetof(SystemSettings, axis_deadzone) + 6*sizeof(int32_t), 0, 32767 },
+    { "Dz: Misko X",      offsetof(SystemSettings, axis_deadzone) + 7*sizeof(int32_t), 0, 32767 },
+    { "Dz: Misko Y",      offsetof(SystemSettings, axis_deadzone) + 8*sizeof(int32_t), 0, 32767 },
+};
+#define NUM_SETTINGS (sizeof(g_settings) / sizeof(g_settings[0]))
+
+static int32_t settings_get(uint32_t idx) {
+    if (idx >= NUM_SETTINGS) return 0;
+    return *(int32_t *)((uint8_t *)&system_settings + g_settings[idx].offset);
+}
+
+static void settings_set(uint32_t idx, int32_t val) {
+    if (idx >= NUM_SETTINGS) return;
+    if (val < g_settings[idx].min_val) val = g_settings[idx].min_val;
+    if (val > g_settings[idx].max_val) val = g_settings[idx].max_val;
+    *(int32_t *)((uint8_t *)&system_settings + g_settings[idx].offset) = val;
+}
+
+void settings_init_display(void) {
+    static char opts[300];
+    opts[0] = '\0';
+    for (size_t i = 0; i < NUM_SETTINGS; i++) {
+        if (i > 0) strncat(opts, "\n", sizeof(opts) - strlen(opts) - 1);
+        strncat(opts, g_settings[i].name, sizeof(opts) - strlen(opts) - 1);
+    }
+    set_var_settings(opts);
+    set_var_settings_selected(0);
+    update_var_setting_value(settings_get(0));
+}
+
+/*=====================================================================*/
+/* Save / popup                                                        */
+/*=====================================================================*/
+
+static void hide_popup_timer_cb(lv_timer_t *timer) {
     lv_obj_add_flag(objects.settings_saved_popup, LV_OBJ_FLAG_HIDDEN);
-    lv_timer_del(timer); // Delete timer after execution
+    lv_timer_del(timer);
 }
 
-void action_save_settings(lv_event_t * e) {
-    system_settings.frequency = (uint32_t)get_selector_position_to_frequency();
-    system_settings.brightness = (int32_t)get_var_brightness();
-    system_settings.deadzone = (int32_t)get_var_deadzone();
+void action_save_settings(lv_event_t *e) {
     Flash_Write_All_Settings(FLASH_PAGE_ADDRESS, &system_settings);
-
-    Flash_Read_All_Settings(FLASH_PAGE_ADDRESS, &system_settings);
-
+    Set_Brightness((uint8_t)system_settings.brightness);
     Set_Sampling_Frequency(system_settings.frequency);
-    Set_Brightness(system_settings.brightness);
-
     lv_obj_clear_flag(objects.settings_saved_popup, LV_OBJ_FLAG_HIDDEN);
-
-    // Create one-shot timer for 1000ms to hide popup and re-enable input
     lv_timer_create(hide_popup_timer_cb, 1000, NULL);
-
 }
 
-
-
-
-
-void action_set_wheel_center(lv_event_t * e){
-	htim4.Instance->CNT = 32000;
+void action_set_wheel_center(lv_event_t *e) {
+    htim4.Instance->CNT = 32000;
 }
 
-void action_change_deadzone(lv_event_t * e){
-	deadzone = get_var_deadzone();
-	char temp[16];
-	snprintf(temp, sizeof(temp), "%d", deadzone);
-	set_var_deadzone_char(temp);
-}
+/*=====================================================================*/
+/* Screen navigation                                                   */
+/*=====================================================================*/
 
-#pragma endregion
-
-#pragma region SwitchScreens
 void action_switch_to_main_screen(lv_event_t *e) {
-	loadScreen(SCREEN_ID_MAIN);
-	SelectedScreen = SCREEN_ID_MAIN;
+    loadScreen(SCREEN_ID_MAIN);
+    SelectedScreen = SCREEN_ID_MAIN;
 }
 
 void action_switch_to_sensor_status(lv_event_t *e) {
@@ -102,257 +142,122 @@ void action_switch_to_sensor_status(lv_event_t *e) {
 }
 
 void action_switch_to_select_game(lv_event_t *e) {
-	loadScreen(SCREEN_ID_SELECT_GAME);
-	SelectedScreen = SCREEN_ID_SELECT_GAME;
+    loadScreen(SCREEN_ID_SELECT_GAME);
+    SelectedScreen = SCREEN_ID_SELECT_GAME;
 }
 
 void action_switch_to_farming_simulator25(lv_event_t *e) {
-	loadScreen(SCREEN_ID_FARMING_SIMULATOR2025);
-	SelectedScreen = SCREEN_ID_FARMING_SIMULATOR2025;
+    loadScreen(SCREEN_ID_FARMING_SIMULATOR2025);
+    SelectedScreen = SCREEN_ID_FARMING_SIMULATOR2025;
 }
 
-void action_switch_to_settings(lv_event_t * e){
+static void on_settings_selector_changed(lv_event_t *e) {
+    if (lv_event_get_code(e) != LV_EVENT_VALUE_CHANGED) return;
+    uint32_t idx = (uint32_t)lv_dropdown_get_selected(objects.settings_selector);
+    update_var_setting_value(settings_get(idx));
+}
+
+void action_switch_to_settings(lv_event_t *e) {
     loadScreen(SCREEN_ID_SETTINGS);
     SelectedScreen = SCREEN_ID_SETTINGS;
+    /* loadScreen recreates the screen, so re-register the change handler */
+    lv_obj_add_event_cb(objects.settings_selector, on_settings_selector_changed, LV_EVENT_VALUE_CHANGED, NULL);
+    update_var_setting_value(settings_get((uint32_t)lv_dropdown_get_selected(objects.settings_selector)));
 }
 
-void action_switch_to_calibration(lv_event_t * e){
+void action_switch_to_calibration(lv_event_t *e) {
     loadScreen(SCREEN_ID_CALIBRATION);
     SelectedScreen = SCREEN_ID_CALIBRATION;
 }
 
-void action_switch_to_ffb_settings_screen(lv_event_t * e){
-    loadScreen(SCREEN_ID_FFB_SETTINGS);
-    SelectedScreen = SCREEN_ID_FFB_SETTINGS;
-    int32_t selected = get_var_ffb_settings_selected();
-    if (objects.ffb_settings_selector) {
-        lv_dropdown_set_selected(objects.ffb_settings_selector, selected);
-    }
-}
-#pragma endregion
+/*=====================================================================*/
+/* Calibration                                                         */
+/*=====================================================================*/
 
-#pragma region Calibration
 void action_start_calibration(lv_event_t *e) {
-	Inputs_StartCalibration();
-	loadScreen(SCREEN_ID_CALIBRATION_INDICATION);
-	SelectedScreen = SCREEN_ID_CALIBRATION_INDICATION;
+    Inputs_StartCalibration();
+    loadScreen(SCREEN_ID_CALIBRATION_INDICATION);
+    SelectedScreen = SCREEN_ID_CALIBRATION_INDICATION;
 }
 
 void action_stop_calibration(lv_event_t *e) {
-	//resets checkboxes
-	Inputs_StopCalibration();
-	Flash_Write_All_Settings(FLASH_PAGE_ADDRESS, &system_settings);
-	set_var_wheel_calib(false);
-	set_var_pedals_calib(false);
-	set_var_l_joy_calib(false);
-	set_var_misko_joy_calib(false);
-
-	loadScreen(SCREEN_ID_CALIBRATION);
-	SelectedScreen = SCREEN_ID_CALIBRATION;
-
-	set_var_calibration_status("Calibration stopped");
+    Inputs_StopCalibration();
+    set_var_wheel_calib(false);
+    set_var_pedals_calib(false);
+    set_var_l_joy_calib(false);
+    set_var_misko_joy_calib(false);
+    loadScreen(SCREEN_ID_CALIBRATION);
+    SelectedScreen = SCREEN_ID_CALIBRATION;
+    set_var_calibration_status("Calibration stopped");
 }
 
-void action_reset_calibration_values(lv_event_t * e){
-	for (size_t i = 0; i < MAX_AXES; i++){
-		system_settings.axis_min[i] = DEFAULT_AXIS_MAX;
-		system_settings.axis_max[i] = DEFAULT_AXIS_MIN;
-	}
-}
-
-#pragma endregion
-
-void action_ffb_off(lv_event_t * e){
-	set_var_force_feedback_status("FFB OFF");
-}
-
-void action_ffb_on(lv_event_t * e){
-	set_var_force_feedback_status("!FFB ON!");
-}
-
-#pragma region FFBSettings
-/* Helper: Get current value based on selected setting */
-static int32_t ffb_get_current_value(void) {
-    int32_t selected = lv_dropdown_get_selected(objects.ffb_settings_selector);
-    switch (selected) {
-        case 0: return system_settings.ffb_gain;
-        case 1: return system_settings.ffb_max_current_mA;
-        case 2: return system_settings.ffb_spd_threshold;
-        case 3: return system_settings.ffb_acl_threshold;
-        case 4: return system_settings.ffb_frc_threshold;
-        case 5: return system_settings.ffb_spring_coef;
-        case 6: return system_settings.ffb_damper_coef;
-        case 7: return system_settings.ffb_friction_coef;
-        case 8: return system_settings.ffb_inertia_coef;
-        default: return 0;
+void action_reset_calibration_values(lv_event_t *e) {
+    for (size_t i = 0; i < MAX_AXES; i++) {
+        system_settings.axis_min[i] = DEFAULT_AXIS_MAX;
+        system_settings.axis_max[i] = DEFAULT_AXIS_MIN;
     }
 }
 
-/* Helper: Set value based on selected setting */
-static void ffb_set_current_value(int32_t value) {
-    if (value < 0) value = 0;
-    int32_t selected = lv_dropdown_get_selected(objects.ffb_settings_selector);
-    switch (selected) {
-        case 0: system_settings.ffb_gain = value; break;
-        case 1: system_settings.ffb_max_current_mA = value; break;
-        case 2: system_settings.ffb_spd_threshold = value; break;
-        case 3: system_settings.ffb_acl_threshold = value; break;
-        case 4: system_settings.ffb_frc_threshold = value; break;
-        case 5: system_settings.ffb_spring_coef = value; break;
-        case 6: system_settings.ffb_damper_coef = value; break;
-        case 7: system_settings.ffb_friction_coef = value; break;
-        case 8: system_settings.ffb_inertia_coef = value; break;
+/*=====================================================================*/
+/* FFB toggle                                                          */
+/*=====================================================================*/
+
+void action_ffb_off(lv_event_t *e) { set_var_force_feedback_status("FFB OFF"); }
+void action_ffb_on(lv_event_t *e)  { set_var_force_feedback_status("!FFB ON!"); }
+
+/*=====================================================================*/
+/* Settings increase / decrease with acceleration                      */
+/*=====================================================================*/
+
+void action_increase_decrease_setting_value(lv_event_t *e) {
+    lv_event_code_t code = lv_event_get_code(e);
+
+    if (code == LV_EVENT_RELEASED) return;
+    if (code != LV_EVENT_CLICKED &&
+        code != LV_EVENT_LONG_PRESSED &&
+        code != LV_EVENT_LONG_PRESSED_REPEAT) return;
+
+    static uint32_t repeat_count = 0;
+    bool increase = (lv_event_get_target(e) == objects.increase_btn);
+
+    int32_t step;
+    if (code == LV_EVENT_LONG_PRESSED_REPEAT) {
+        ++repeat_count;
+        step = (repeat_count < 10) ? 1 : (repeat_count < 30) ? 10 : 100;
+    } else {
+        repeat_count = 0;
+        step = 1;
     }
-    update_var_setting_value(value);
+    if (!increase) step = -step;
+
+    uint32_t idx = (uint32_t)lv_dropdown_get_selected(objects.settings_selector);
+    settings_set(idx, settings_get(idx) + step);
+    update_var_setting_value(settings_get(idx));
 }
 
-/* Adjustment buttons */
-void action_ffb_setting_minus1(lv_event_t * e) {
-    int32_t value = ffb_get_current_value();
-    ffb_set_current_value(value - 1);
-    int32_t new_value = ffb_get_current_value();
-    
-    char temp[20];
-    snprintf(temp, sizeof(temp), "%ld", new_value);
-    lv_label_set_text(objects.obj21, temp);
-}
+/*=====================================================================*/
+/* FS25 screen                                                         */
+/*=====================================================================*/
 
-void action_ffb_setting_plus1(lv_event_t * e) {
-    int32_t value = ffb_get_current_value();
-    ffb_set_current_value(value + 1);
-    int32_t new_value = ffb_get_current_value();
-    
-    char temp[20];
-    snprintf(temp, sizeof(temp), "%ld", new_value);
-    lv_label_set_text(objects.obj21, temp);
-}
+void action_fs25_slider1_value(lv_event_t *e) { slider1_value = lv_slider_get_value(lv_event_get_target(e)); }
+void action_fs25_slider2_value(lv_event_t *e) { slider2_value = lv_slider_get_value(lv_event_get_target(e)); }
+void action_fs25_slider3_value(lv_event_t *e) { slider3_value = lv_slider_get_value(lv_event_get_target(e)); }
+void action_fs25_slider4_value(lv_event_t *e) { slider4_value = lv_slider_get_value(lv_event_get_target(e)); }
 
-void action_ffb_setting_minus10(lv_event_t * e) {
-    int32_t value = ffb_get_current_value();
-    ffb_set_current_value(value - 10);
-    int32_t new_value = ffb_get_current_value();
-    
-    char temp[20];
-    snprintf(temp, sizeof(temp), "%ld", new_value);
-    lv_label_set_text(objects.obj21, temp);
-}
+void action_fs25_button1_clicked(lv_event_t *e)  { FS25_Button_States[0] = 1; }
+void action_fs25_button2_clicked(lv_event_t *e)  { FS25_Button_States[1] = 1; }
+void action_fs25_button3_clicked(lv_event_t *e)  { FS25_Button_States[2] = 1; }
+void action_fs25_button4_clicked(lv_event_t *e)  { FS25_Button_States[3] = 1; }
+void action_fs25_button1_released(lv_event_t *e) { FS25_Button_States[0] = 0; }
+void action_fs25_button2_released(lv_event_t *e) { FS25_Button_States[1] = 0; }
+void action_fs25_button3_released(lv_event_t *e) { FS25_Button_States[2] = 0; }
+void action_fs25_button4_released(lv_event_t *e) { FS25_Button_States[3] = 0; }
 
-void action_ffb_setting_plus10(lv_event_t * e) {
-    int32_t value = ffb_get_current_value();
-    ffb_set_current_value(value + 10);
-    int32_t new_value = ffb_get_current_value();
-    
-    char temp[20];
-    snprintf(temp, sizeof(temp), "%ld", new_value);
-    lv_label_set_text(objects.obj21, temp);
-}
-
-void action_ffb_setting_minus100(lv_event_t * e) {
-    int32_t value = ffb_get_current_value();
-    ffb_set_current_value(value - 100);
-    int32_t new_value = ffb_get_current_value();
-    
-    char temp[20];
-    snprintf(temp, sizeof(temp), "%ld", new_value);
-    lv_label_set_text(objects.obj21, temp);
-}
-
-void action_ffb_setting_plus100(lv_event_t * e) {
-    int32_t value = ffb_get_current_value();
-    ffb_set_current_value(value + 100);
-    int32_t new_value = ffb_get_current_value();
-    
-    char temp[20];
-    snprintf(temp, sizeof(temp), "%ld", new_value);
-    lv_label_set_text(objects.obj21, temp);
-}
-
-/* OK button - save FFB settings and return to main */
-void action_ffb_settings_ok(lv_event_t * e) {
-	system_settings.ffb = (bool)lv_obj_get_state(objects.ffb_switch);
-    /* Write settings to flash */
-    Flash_Write_All_Settings(FLASH_PAGE_ADDRESS, &system_settings);
-    /* Read back to verify */
-    Flash_Read_All_Settings(FLASH_PAGE_ADDRESS, &system_settings);
-    /* Update formatted settings string */
-    set_var_ffb_settings(format_ffb_settings_string());
-}
-
-
-#pragma endregion
-
-
-#pragma region fs25Screen
-void action_fs25_slider1_value(lv_event_t * e) {
-    lv_obj_t * slider = lv_event_get_target(e);
-    slider1_value = lv_slider_get_value(slider);
-}
-
-void action_fs25_slider2_value(lv_event_t * e) {
-    lv_obj_t * slider = lv_event_get_target(e);
-    slider2_value = lv_slider_get_value(slider);
-}
-
-void action_fs25_slider3_value(lv_event_t * e) {
-    lv_obj_t * slider = lv_event_get_target(e);
-    slider3_value = lv_slider_get_value(slider);
-}
-
-void action_fs25_slider4_value(lv_event_t * e) {
-    lv_obj_t * slider = lv_event_get_target(e);
-    slider4_value = lv_slider_get_value(slider);
-}
-
-void action_fs25_button1_clicked(lv_event_t *e) {
-    FS25_Button_States[0] = 1;
-}
-void action_fs25_button2_clicked(lv_event_t *e) {
-    FS25_Button_States[1] = 1;
-}
-void action_fs25_button3_clicked(lv_event_t *e) {
-    FS25_Button_States[2] = 1;
-}
-void action_fs25_button4_clicked(lv_event_t *e) {
-    FS25_Button_States[3] = 1;
-}
-
-void action_fs25_button1_released(lv_event_t * e){
-    FS25_Button_States[0] = 0;
-}
-void action_fs25_button2_released(lv_event_t * e){
-    FS25_Button_States[1] = 0;
-}
-void action_fs25_button3_released(lv_event_t * e){
-    FS25_Button_States[2] = 0;
-}
-void action_fs25_button4_released(lv_event_t * e){
-    FS25_Button_States[3] = 0;
-}
-
-void action_fs25_switch1_checked(lv_event_t * e){
-	FS25_Switch_States[0] = 1;
-}
-void action_fs25_switch2_checked(lv_event_t * e){
-	FS25_Switch_States[1] = 1;
-}
-void action_fs25_switch3_checked(lv_event_t * e){
-	FS25_Switch_States[2] = 1;
-}
-void action_fs25_switch4_checked(lv_event_t * e){
-	FS25_Switch_States[3] = 1;
-}
-
-void action_fs25_switch1_unchecked(lv_event_t * e){
-	FS25_Switch_States[0] = 0;
-}
-void action_fs25_switch2_unchecked(lv_event_t * e){
-	FS25_Switch_States[1] = 0;
-}
-void action_fs25_switch3_unchecked(lv_event_t * e){
-	FS25_Switch_States[2] = 0;
-}
-void action_fs25_switch4_unchecked(lv_event_t * e){
-	FS25_Switch_States[3] = 0;
-}
-#pragma endregion
-
+void action_fs25_switch1_checked(lv_event_t *e)   { FS25_Switch_States[0] = 1; }
+void action_fs25_switch2_checked(lv_event_t *e)   { FS25_Switch_States[1] = 1; }
+void action_fs25_switch3_checked(lv_event_t *e)   { FS25_Switch_States[2] = 1; }
+void action_fs25_switch4_checked(lv_event_t *e)   { FS25_Switch_States[3] = 1; }
+void action_fs25_switch1_unchecked(lv_event_t *e) { FS25_Switch_States[0] = 0; }
+void action_fs25_switch2_unchecked(lv_event_t *e) { FS25_Switch_States[1] = 0; }
+void action_fs25_switch3_unchecked(lv_event_t *e) { FS25_Switch_States[2] = 0; }
+void action_fs25_switch4_unchecked(lv_event_t *e) { FS25_Switch_States[3] = 0; }

@@ -61,14 +61,17 @@ enum FlowGlobalVariables {
     FLOW_GLOBAL_VARIABLE_MISKO_JOY_CALIB = 43,
     FLOW_GLOBAL_VARIABLE_FREQUENCIES = 44,
     FLOW_GLOBAL_VARIABLE_SELECTED_FREQUENCY_POSITION = 45,
-    FLOW_GLOBAL_VARIABLE_FFB_STATE = 46,
-    FLOW_GLOBAL_VARIABLE_BRIGHTNESS = 47,
-    FLOW_GLOBAL_VARIABLE_DEADZONE = 48,
-    FLOW_GLOBAL_VARIABLE_DEADZONE_CHAR = 49,
-    FLOW_GLOBAL_VARIABLE_AXIS_MIN_MAX = 50,
-    FLOW_GLOBAL_VARIABLE_FFB_SETTINGS = 51,
-    FLOW_GLOBAL_VARIABLE_SETTING_VALUE = 52,
-    FLOW_GLOBAL_VARIABLE_FFB_SETTINGS_SELECTED = 53
+    FLOW_GLOBAL_VARIABLE_BRIGHTNESS = 46,
+    FLOW_GLOBAL_VARIABLE_AXIS_MIN_MAX = 47,
+    FLOW_GLOBAL_VARIABLE_SETTINGS = 48,
+    FLOW_GLOBAL_VARIABLE_SETTING_VALUE = 49,
+    FLOW_GLOBAL_VARIABLE_SETTINGS_SELECTED = 50,
+    FLOW_GLOBAL_VARIABLE_FFB_FORCE_START = 51,
+    FLOW_GLOBAL_VARIABLE_FFB_FORCE = 52,
+    FLOW_GLOBAL_VARIABLE_WHEEL_SPEED = 53,
+    FLOW_GLOBAL_VARIABLE_WHEEL_SPEED_START = 54,
+    FLOW_GLOBAL_VARIABLE_WHEEL_ACCEL = 55,
+    FLOW_GLOBAL_VARIABLE_WHEEL_ACCEL_START = 56
 };
 
 // Native global variables
@@ -165,22 +168,28 @@ extern const char *get_var_frequencies();
 extern void set_var_frequencies(const char *value);
 extern int32_t get_var_selected_frequency_position();
 extern void set_var_selected_frequency_position(int32_t value);
-extern int32_t get_var_ffb_state();
-extern void set_var_ffb_state(int32_t value);
 extern int32_t get_var_brightness();
 extern void set_var_brightness(int32_t value);
-extern int32_t get_var_deadzone();
-extern void set_var_deadzone(int32_t value);
-extern const char *get_var_deadzone_char();
-extern void set_var_deadzone_char(const char *value);
 extern const char *get_var_axis_min_max();
 extern void set_var_axis_min_max(const char *value);
-extern const char *get_var_ffb_settings();
-extern void set_var_ffb_settings(const char *value);
+extern const char *get_var_settings();
+extern void set_var_settings(const char *value);
 extern const char *get_var_setting_value();
 extern void set_var_setting_value(const char *value);
-extern int32_t get_var_ffb_settings_selected();
-extern void set_var_ffb_settings_selected(int32_t value);
+extern int32_t get_var_settings_selected();
+extern void set_var_settings_selected(int32_t value);
+extern int32_t get_var_ffb_force_start();
+extern void set_var_ffb_force_start(int32_t value);
+extern int32_t get_var_ffb_force();
+extern void set_var_ffb_force(int32_t value);
+extern int32_t get_var_wheel_speed();
+extern void set_var_wheel_speed(int32_t value);
+extern int32_t get_var_wheel_speed_start();
+extern void set_var_wheel_speed_start(int32_t value);
+extern int32_t get_var_wheel_accel();
+extern void set_var_wheel_accel(int32_t value);
+extern int32_t get_var_wheel_accel_start();
+extern void set_var_wheel_accel_start(int32_t value);
 
 
 #ifdef __cplusplus
