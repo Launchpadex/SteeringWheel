@@ -75,6 +75,7 @@ typedef struct {
 } EffectState_t;
 
 static EffectState_t gEffectStates[MAX_EFFECTS + 1]; /* index 0 unused */
+FFBEffectDebug_t     g_ffb_debug[MAX_EFFECTS + 1];   /* index 0 unused */
 PIDBlockLoad_t       gNewEffectBlockLoad;
 static uint8_t       gDeviceGain = 255U;
 
@@ -159,7 +160,7 @@ static int16_t ConstrainEffect(int32_t val) {
 static int16_t ApplyEnvelope(int16_t magnitude, uint32_t elapsed, uint8_t attackLevel, uint8_t fadeLevel, uint16_t attackTime, uint16_t fadeTime, uint16_t duration, uint16_t startDelay) {
     if (elapsed < startDelay) return 0;
     uint32_t effectTime = elapsed - startDelay;
-    if (effectTime >= duration) return 0;
+    if (duration != 0xFFFFU && effectTime >= duration) return 0;
 
     if (effectTime < attackTime && attackTime > 0) {
         return (int16_t)((int32_t)magnitude * attackLevel / 255);
@@ -191,20 +192,20 @@ static int16_t SpringEffect(int32_t err, int16_t mag) {
 
 static int16_t DamperEffect(int32_t spd, int16_t mag) {
     if (labs(spd) < system_settings.ffb_spd_threshold) return 0;
-    return ConstrainEffect(-(int32_t)mag * spd * system_settings.ffb_damper_coef / 512);
+    return ConstrainEffect((int32_t)mag * spd * system_settings.ffb_damper_coef / 512);
 }
 
 static int16_t InertiaEffect(int32_t acl, int16_t mag) {
     if (labs(acl) < system_settings.ffb_acl_threshold) return 0;
-    return ConstrainEffect(-(int32_t)mag * acl * system_settings.ffb_inertia_coef / 32);
+    return ConstrainEffect((int32_t)mag * acl * system_settings.ffb_inertia_coef / 32);
 }
 
 static int16_t FrictionEffect(int32_t spd, int16_t mag) {
     int32_t threshold = system_settings.ffb_frc_threshold;
     if (threshold <= 0) return 0;
     if (labs(spd) < threshold)
-        return ConstrainEffect(-(int32_t)spd * mag * system_settings.ffb_friction_coef / (threshold * 32));
-    return ConstrainEffect(-(int32_t)mag * system_settings.ffb_friction_coef / 32 * (spd > 0 ? 1 : -1));
+        return ConstrainEffect((int32_t)spd * mag * system_settings.ffb_friction_coef / (threshold * 32));
+    return ConstrainEffect((int32_t)mag * system_settings.ffb_friction_coef / 32 * (spd > 0 ? 1 : -1));
 }
 
 /* ------------------------------------------------------------------ */
@@ -214,7 +215,6 @@ void FFB_Init(void)
     memset(gEffectStates, 0, sizeof(gEffectStates));
     memset(&gNewEffectBlockLoad, 0, sizeof(gNewEffectBlockLoad));
     gDeviceGain = 255U;
-    printf("[FFB] Init\r\n");
 }
 
 /* ------------------------------------------------------------------ */
@@ -229,29 +229,26 @@ static uint8_t GetNextFreeEffect(void)
 void FFB_CreateNewEffect(CreateNewEffect_t *in, PIDBlockLoad_t *out)
 {
     uint8_t eid = GetNextFreeEffect();
-    out->report_id = 6U;
+    out->report_id = 0x12U;
     if (eid == 0U) {
         out->effect_block_index = 0U;
         out->load_status        = 2U; /* Full */
         out->ram_pool_available = 0U;
-        printf("[FFB] CreateNewEffect type=%d -> FULL\r\n", in->effect_type);
     } else {
         gEffectStates[eid].state = 1U;
         gEffectStates[eid].type  = in->effect_type;
         out->effect_block_index  = eid;
         out->load_status         = 1U; /* Success */
         out->ram_pool_available  = 0xFFFFU;
-        printf("[FFB] CreateNewEffect type=%d -> eid=%d\r\n", in->effect_type, eid);
     }
 }
 
 void FFB_GetPIDPool(PIDPool_t *out)
 {
-    out->report_id                = 7U;
-    out->ram_pool_size            = 0xFFFFU;
+    out->report_id                = 0x13U;
+    out->ram_pool_size            = MAX_EFFECTS;
     out->max_simultaneous_effects = MAX_EFFECTS;
-    out->memory_management        = 3U;
-    printf("[FFB] GetPIDPool\r\n");
+    out->memory_management        = 1U;
 }
 
 /* ------------------------------------------------------------------ */
@@ -270,8 +267,6 @@ void FFB_ProcessOutputReport(uint8_t *buf, uint16_t len)
             uint16_t dur  = (uint16_t)(buf[3]  | ((uint16_t)buf[4]  << 8));
             int16_t  gain = (int16_t) (buf[7]  | ((uint16_t)buf[8]  << 8));
             uint16_t dir  = (uint16_t)(buf[11] | ((uint16_t)buf[12] << 8));
-            printf("[FFB] SetEffect eid=%d type=%d dur=%u gain=%d dir=%u\r\n",
-                   eid, type, dur, gain, dir);
             if (eid >= FIRST_EID && eid <= MAX_EFFECTS) {
                 gEffectStates[eid].type      = type;
                 gEffectStates[eid].duration  = dur;
@@ -289,10 +284,6 @@ void FFB_ProcessOutputReport(uint8_t *buf, uint16_t len)
     case 0x02U: /* Set Envelope */
         if (len >= 8U) {
             uint8_t eid = buf[1];
-            printf("[FFB] SetEnvelope eid=%d atk=%u fade=%u atkT=%u fadT=%u\r\n",
-                   eid, buf[2], buf[3],
-                   (uint16_t)(buf[4]|(uint16_t)(buf[5]<<8)),
-                   (uint16_t)(buf[6]|(uint16_t)(buf[7]<<8)));
             if (eid >= FIRST_EID && eid <= MAX_EFFECTS) {
                 gEffectStates[eid].attackLevel = buf[2];
                 gEffectStates[eid].fadeLevel   = buf[3];
@@ -307,8 +298,6 @@ void FFB_ProcessOutputReport(uint8_t *buf, uint16_t len)
             uint8_t eid   = buf[1];
             int16_t cpOff = (int16_t)(buf[3]|(uint16_t)(buf[4]<<8));
             int16_t posK  = (int16_t)(buf[5]|(uint16_t)(buf[6]<<8));
-            printf("[FFB] SetCondition eid=%d pbo=%d cpOff=%d posK=%d dead=%u\r\n",
-                   eid, buf[2], cpOff, posK, len>=8U ? buf[7] : 0);
             if (eid >= FIRST_EID && eid <= MAX_EFFECTS) {
                 gEffectStates[eid].parameterBlockOffset = buf[2];
                 gEffectStates[eid].cpOffset             = cpOff;
@@ -324,8 +313,6 @@ void FFB_ProcessOutputReport(uint8_t *buf, uint16_t len)
             int16_t  mag = (int16_t)(buf[2]|(uint16_t)(buf[3]<<8));
             int16_t  off = (int16_t)(buf[4]|(uint16_t)(buf[5]<<8));
             uint16_t per = (uint16_t)(buf[7]|(uint16_t)(buf[8]<<8));
-            printf("[FFB] SetPeriodic eid=%d mag=%d off=%d phase=%u period=%u\r\n",
-                   eid, mag, off, buf[6], per);
             if (eid >= FIRST_EID && eid <= MAX_EFFECTS) {
                 gEffectStates[eid].periodicMagnitude = mag;
                 gEffectStates[eid].periodicOffset    = off;
@@ -335,11 +322,10 @@ void FFB_ProcessOutputReport(uint8_t *buf, uint16_t len)
         }
         break;
 
-    case 0x05U: /* Set Constant Force  ← main force report */
+    case 0x05U: /* Set Constant Force */
         if (len >= 4U) {
             uint8_t eid = buf[1];
             int16_t mag = (int16_t)(buf[2] | ((uint16_t)buf[3] << 8));
-            printf("[FFB] SetConstantForce eid=%d magnitude=%d\r\n", eid, mag);
             if (eid >= FIRST_EID && eid <= MAX_EFFECTS)
                 gEffectStates[eid].magnitude = mag;
         }
@@ -348,8 +334,6 @@ void FFB_ProcessOutputReport(uint8_t *buf, uint16_t len)
     case 0x06U: /* Set Ramp Force */
         if (len >= 4U) {
             uint8_t eid = buf[1];
-            printf("[FFB] SetRampForce eid=%d start=%d end=%d\r\n",
-                   eid, (int8_t)buf[2], (int8_t)buf[3]);
             if (eid >= FIRST_EID && eid <= MAX_EFFECTS) {
                 gEffectStates[eid].rampStart = (int8_t)buf[2];
                 gEffectStates[eid].rampEnd   = (int8_t)buf[3];
@@ -362,10 +346,6 @@ void FFB_ProcessOutputReport(uint8_t *buf, uint16_t len)
             uint8_t eid = buf[1];
             uint8_t op  = buf[2];
             uint8_t lp  = buf[3];
-            printf("[FFB] EffectOp eid=%d op=%s(%d) loop=%d\r\n",
-                   eid,
-                   op==1U?"Start":op==2U?"StartSolo":op==3U?"Stop":"?",
-                   op, lp);
             if (eid >= FIRST_EID && eid <= MAX_EFFECTS) {
                 if (op == 2U) { /* StartSolo — stop all others */
                     for (uint8_t i = FIRST_EID; i <= MAX_EFFECTS; i++)
@@ -375,7 +355,7 @@ void FFB_ProcessOutputReport(uint8_t *buf, uint16_t len)
                 if (op == 1U || op == 2U) {
                     gEffectStates[eid].state     = 2U;
                     gEffectStates[eid].loopCount = lp;
-                    gEffectStates[eid].startTime = HAL_GetTick();  /* assuming HAL_GetTick() for time */
+                    gEffectStates[eid].startTime = HAL_GetTick();
                 } else if (op == 3U) {
                     if (gEffectStates[eid].state == 2U)
                         gEffectStates[eid].state = 1U;
@@ -387,7 +367,6 @@ void FFB_ProcessOutputReport(uint8_t *buf, uint16_t len)
     case 0x0BU: /* Block Free */
         if (len >= 2U) {
             uint8_t eid = buf[1];
-            printf("[FFB] BlockFree eid=%d\r\n", eid);
             if (eid >= FIRST_EID && eid <= MAX_EFFECTS)
                 memset(&gEffectStates[eid], 0, sizeof(EffectState_t));
         }
@@ -396,10 +375,6 @@ void FFB_ProcessOutputReport(uint8_t *buf, uint16_t len)
     case 0x0CU: /* Device Control */
         if (len >= 2U) {
             uint8_t c = buf[1];
-            printf("[FFB] DeviceControl 0x%02X%s%s%s%s%s%s\r\n", c,
-                   c&0x01U?" EnActuators":"", c&0x02U?" DisActuators":"",
-                   c&0x04U?" StopAll":"",   c&0x08U?" Reset":"",
-                   c&0x10U?" Pause":"",     c&0x20U?" Continue":"");
             if (c & 0x08U)
                 memset(gEffectStates, 0, sizeof(gEffectStates));
             else if (c & 0x04U)
@@ -409,14 +384,11 @@ void FFB_ProcessOutputReport(uint8_t *buf, uint16_t len)
         break;
 
     case 0x0DU: /* Device Gain */
-        if (len >= 2U) {
+        if (len >= 2U)
             gDeviceGain = buf[1];
-            printf("[FFB] DeviceGain=%d\r\n", gDeviceGain);
-        }
         break;
 
     default:
-        printf("[FFB] Unknown rid=0x%02X len=%d\r\n", rid, len);
         break;
     }
 }
@@ -465,7 +437,7 @@ int32_t FFB_GetForce(int32_t position, int32_t speed, int32_t accel, uint32_t cu
             break;
 
         case 0x08U: /* Spring */
-            effect_force = SpringEffect(position - gEffectStates[i].cpOffset, gEffectStates[i].positiveCoefficient);
+            effect_force = SpringEffect((int32_t)position - (int32_t)gEffectStates[i].cpOffset, gEffectStates[i].positiveCoefficient);
             break;
 
         case 0x09U: /* Damper */
@@ -484,17 +456,52 @@ int32_t FFB_GetForce(int32_t position, int32_t speed, int32_t accel, uint32_t cu
             break;
         }
 
+        g_ffb_debug[i].state   = gEffectStates[i].state;
+        g_ffb_debug[i].type    = gEffectStates[i].type;
+        g_ffb_debug[i].force   = effect_force;
+        g_ffb_debug[i].elapsed = elapsed;
         force += effect_force;
     }
+    /* clear debug slots that are not playing */
+    for (uint8_t i = FIRST_EID; i <= MAX_EFFECTS; i++) {
+        if (gEffectStates[i].state != 2U) {
+            g_ffb_debug[i].state = gEffectStates[i].state;
+            g_ffb_debug[i].type  = gEffectStates[i].type;
+            g_ffb_debug[i].force = 0;
+            g_ffb_debug[i].elapsed = 0;
+        }
+    }
 
-    force = force * gDeviceGain / 255;
+    force = -(force * gDeviceGain / 255);
     force = ConstrainEffect(force);
+
+    //SoftLimits
+    //FFB_CalculateSoftLimitForce(position, system_settings.deg)
 
     /* Scale force to current in mA — int64_t prevents overflow at high currents */
     int32_t current_mA = (int32_t)((int64_t)force * system_settings.ffb_gain * system_settings.ffb_max_current_mA / (32767LL * 100));
 
     g_last_force = current_mA;
     return current_mA;
+}
+
+int32_t FFB_CalculateSoftLimitForce(uint16_t position, uint16_t soft_limit_zone){
+	int32_t max_force = system_settings.ffb_max_current_mA;
+	//TODO: Implement degrees_of_rotation
+
+	//Left SoftLimit
+	if (position < soft_limit_zone){
+		uint16_t overshoot = soft_limit_zone - position;
+		return (int32_t)max_force * overshoot / soft_limit_zone;
+	}
+
+	//Right SoftLimit
+	if (position > UINT16_MAX - soft_limit_zone){
+		uint16_t overshoot = position - (UINT16_MAX - soft_limit_zone);
+		return -(int32_t)max_force * overshoot / soft_limit_zone;
+	}
+
+	return 0; // No force in normal zone
 }
 
 /* ------------------------------------------------------------------ */
@@ -510,6 +517,5 @@ void FFB_SetMotorCurrent(int32_t current_mA)
         current_mA = -system_settings.ffb_max_current_mA;
     }
 
-    //Send Current to VESC
-    vesc_set_current(current_mA / 1000.0f);
+    vesc_queue_current(current_mA);
 }

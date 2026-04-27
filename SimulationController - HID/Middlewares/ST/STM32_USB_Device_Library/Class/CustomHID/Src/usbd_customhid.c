@@ -484,11 +484,11 @@ static uint8_t USBD_CUSTOM_HID_Setup(USBD_HandleTypeDef *pdev,
           uint8_t report_type = (uint8_t)(req->wValue >> 8);
           uint8_t report_id   = (uint8_t)(req->wValue & 0xFFU);
           if (report_type == 0x03U) { // Feature
-            if (report_id == 7U) {
+            if (report_id == 0x13U) { // PID Pool
               static PIDPool_t pool;
               FFB_GetPIDPool(&pool);
               (void)USBD_CtlSendData(pdev, (uint8_t *)&pool, sizeof(PIDPool_t));
-            } else if (report_id == 6U) {
+            } else if (report_id == 0x12U) { // PID Block Load
               (void)USBD_CtlSendData(pdev, (uint8_t *)&gNewEffectBlockLoad,
                                      sizeof(PIDBlockLoad_t));
               gNewEffectBlockLoad.report_id = 0U;
@@ -740,7 +740,7 @@ static uint8_t USBD_CUSTOM_HID_EP0_RxReady(USBD_HandleTypeDef *pdev)
 
   if (hhid->IsReportAvailable == 1U)
   {
-    if (hhid->Report_buf[0] == 5U) // Create New Effect (feature SET)
+    if (hhid->Report_buf[0] == 0x11U) // Create New Effect (feature SET)
     {
       FFB_CreateNewEffect((CreateNewEffect_t *)hhid->Report_buf, &gNewEffectBlockLoad);
     }

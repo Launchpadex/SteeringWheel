@@ -67,11 +67,7 @@ enum FlowGlobalVariables {
     FLOW_GLOBAL_VARIABLE_SETTING_VALUE = 49,
     FLOW_GLOBAL_VARIABLE_SETTINGS_SELECTED = 50,
     FLOW_GLOBAL_VARIABLE_FFB_FORCE_START = 51,
-    FLOW_GLOBAL_VARIABLE_FFB_FORCE = 52,
-    FLOW_GLOBAL_VARIABLE_WHEEL_SPEED = 53,
-    FLOW_GLOBAL_VARIABLE_WHEEL_SPEED_START = 54,
-    FLOW_GLOBAL_VARIABLE_WHEEL_ACCEL = 55,
-    FLOW_GLOBAL_VARIABLE_WHEEL_ACCEL_START = 56
+    FLOW_GLOBAL_VARIABLE_FFB_FORCE = 52
 };
 
 // Native global variables
@@ -182,14 +178,6 @@ extern int32_t get_var_ffb_force_start();
 extern void set_var_ffb_force_start(int32_t value);
 extern int32_t get_var_ffb_force();
 extern void set_var_ffb_force(int32_t value);
-extern int32_t get_var_wheel_speed();
-extern void set_var_wheel_speed(int32_t value);
-extern int32_t get_var_wheel_speed_start();
-extern void set_var_wheel_speed_start(int32_t value);
-extern int32_t get_var_wheel_accel();
-extern void set_var_wheel_accel(int32_t value);
-extern int32_t get_var_wheel_accel_start();
-extern void set_var_wheel_accel_start(int32_t value);
 
 
 #ifdef __cplusplus

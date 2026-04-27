@@ -31,6 +31,8 @@ typedef struct {
 static const SettingEntry scalar_settings[] = {
     SETTING(TLV_TYPE_BRIGHTNESS,        brightness,          50),
     SETTING(TLV_TYPE_FREQUENCY,         frequency,           1000),
+	SETTING(TLV_TYPE_DEGREES_OF_ROT,    degrees_of_rotation, 900),
+    SETTING(TLV_TYPE_WHEEL_PPR,         wheel_ppr,           6000),
     SETTING(TLV_TYPE_FFB,               ffb,                 0),
     SETTING(TLV_TYPE_FFB_GAIN,          ffb_gain,            100),
     SETTING(TLV_TYPE_FFB_MAX_CURRENT,   ffb_max_current_mA,  15000),

@@ -18,8 +18,12 @@ static uint16_t adc4_values[ADC4_BUFFERSIZE];
 
 /* Global */
 static CalibrationState g_calibration = {0};
-static RawInputs g_latest_inputs = {0};
+static RawInputs  g_latest_inputs  = {0};
+static MappedAxes g_latest_mapped  = {0};
+static uint16_t g_wheel_center = 0;
 hid1_report_t hid1_rep = {};
+uint16_t g_wheel_pos_raw    = 0;
+uint16_t g_wheel_pos_mapped = 0;
 
 /*=====================================================================*/
 void Inputs_Init(void)
@@ -31,6 +35,8 @@ void Inputs_Init(void)
     HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc1_values, ADC1_BUFFERSIZE);
     HAL_ADC_Start_DMA(&hadc2, (uint32_t*)adc2_values, ADC2_BUFFERSIZE);
     HAL_ADC_Start_DMA(&hadc4, (uint32_t*)adc4_values, ADC4_BUFFERSIZE);
+
+    Inputs_SetWheelCenter();
 }
 
 /*=====================================================================*/
@@ -60,6 +66,7 @@ void Inputs_CollectAll(RawInputs *out)
 
     // Read analog values
     temp.wheel = (uint16_t)__HAL_TIM_GET_COUNTER(&htim4);
+    g_wheel_pos_raw = temp.wheel;
     temp.throttle   = adc1_values[0];
     temp.brake      = adc1_values[1];
     temp.clutch     = adc1_values[2];
@@ -73,10 +80,8 @@ void Inputs_CollectAll(RawInputs *out)
     g_latest_inputs = temp;
 }
 
-const RawInputs* Inputs_GetLatestSnapshot(void)
-{
-    return &g_latest_inputs;
-}
+const RawInputs* Inputs_GetLatestSnapshot(void)  { return &g_latest_inputs; }
+const MappedAxes* Inputs_GetLatestMapped(void)   { return &g_latest_mapped; }
 
 /*=====================================================================*/
 void Inputs_MapAxes(const RawInputs *raw, MappedAxes *mapped)
@@ -99,20 +104,31 @@ void Inputs_MapAxes(const RawInputs *raw, MappedAxes *mapped)
     for (int i = 0; i < MAX_AXES; ++i)
     {
         uint32_t raw_val = r[i];
-        uint32_t min     = system_settings.axis_min[i];
-        uint32_t max     = system_settings.axis_max[i];
-        uint32_t range   = max - min;
-
         int32_t output;
 
-        if (raw_val <= min)
-            output = 0;
-        else if (raw_val >= max)
-            output = 65534;
-        else if (range == 0)
-            output = 0;
-        else
-            output = (int32_t)((uint64_t)(raw_val - min) * 65534ULL / range);
+        if (i == AXIS_WHEEL) {
+            int32_t half          = (int32_t)(system_settings.degrees_of_rotation * WHEEL_COUNTS_PER_DEG(system_settings.wheel_ppr) / 2.0f + 0.5f);
+            int16_t signed_offset = (int16_t)(g_wheel_pos_raw - g_wheel_center);
+            int32_t pos_from_min  = (int32_t)signed_offset + half;                // 0 = left lock, 2*half = right lock
+            if (pos_from_min <= 0)
+                output = 0;
+            else if (pos_from_min >= 2 * half)
+                output = 65534;
+            else
+                output = (int32_t)((int64_t)pos_from_min * 65534LL / (2 * half));
+        } else {
+            uint32_t min   = system_settings.axis_min[i];
+            uint32_t max   = system_settings.axis_max[i];
+            uint32_t range = max - min;
+            if (raw_val <= min)
+                output = 0;
+            else if (raw_val >= max)
+                output = 65534;
+            else if (range == 0)
+                output = 0;
+            else
+                output = (int32_t)((uint64_t)(raw_val - min) * 65534ULL / range);
+        }
 
         if (system_settings.axis_deadzone[i] > 0) {
             uint16_t half_dz = (uint16_t)(system_settings.axis_deadzone[i] / 2);
@@ -124,13 +140,15 @@ void Inputs_MapAxes(const RawInputs *raw, MappedAxes *mapped)
 
         mapped->values[i] = (uint16_t)output;
     }
+    g_wheel_pos_mapped = mapped->values[AXIS_WHEEL];
+    g_latest_mapped = *mapped;
 }
 /*=====================================================================*/
 
 
 void Inputs_BuildAndSendReport(const MappedAxes *mapped, uint16_t button_mask_16bit)
 {
-    hid1_rep.report_id = 4;
+    hid1_rep.report_id = 0x10;
     hid1_rep.steering = mapped->values[AXIS_WHEEL];
     hid1_rep.throttle = mapped->values[AXIS_THROTTLE];
     hid1_rep.brake    = mapped->values[AXIS_BRAKE];
@@ -251,3 +269,8 @@ void Inputs_StopCalibration(void)
 }
 
 bool Inputs_IsCalibrating(void) { return g_calibration.is_calibrating; }
+
+void Inputs_SetWheelCenter(void)
+{
+    g_wheel_center = (uint16_t)__HAL_TIM_GET_COUNTER(&htim4);
+}

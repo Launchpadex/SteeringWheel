@@ -1,7 +1,7 @@
 {
   "navigation": {
-    "selectedUserPageObject": "[UI.eez-project]:/userPages/0",
-    "selectedGlobalVariableObject": "[UI.eez-project]:/variables/globalVariables/54",
+    "selectedUserPageObject": "[UI.eez-project]:/userPages/2",
+    "selectedGlobalVariableObject": "[UI.eez-project]:/variables/globalVariables/52",
     "subnavigationSelectedItems": {
       "variables-tab/sub-navigation/selected-item": "Global"
     }
@@ -199,7 +199,7 @@
                   "name": "SensorStatus",
                   "component": "editor",
                   "config": {
-                    "objectPath": "[UI.eez-project]:/userPages/0",
+                    "objectPath": "[UI.eez-project]:/userPages/2",
                     "permanent": false
                   },
                   "icon": "svg:page"
@@ -207,7 +207,7 @@
                 {
                   "type": "tab",
                   "id": "#91ef2746-bc80-4aea-be72-48ed1b361ad8",
-                  "name": "Settings",
+                  "name": "Main",
                   "component": "editor",
                   "config": {
                     "objectPath": "[UI.eez-project]:/userPages/1",
@@ -984,13 +984,16 @@
     "[UI.eez-project]:/userPages/0[flow-state]": {
       "selection": {
         "0": {
-          "2": {}
+          "0": {},
+          "2": {},
+          "3": {},
+          "4": {}
         }
       },
       "transform": {
         "translate": {
-          "x": -340,
-          "y": -238.10623931884766
+          "x": -160,
+          "y": -220
         },
         "scale": 2
       },
@@ -1004,16 +1007,13 @@
     "[UI.eez-project]:/userPages/2[flow-state]": {
       "selection": {
         "0": {
-          "0": {},
-          "2": {},
-          "3": {},
-          "4": {}
+          "2": {}
         }
       },
       "transform": {
         "translate": {
-          "x": -160,
-          "y": -220
+          "x": -340,
+          "y": -238.10623931884766
         },
         "scale": 2
       },

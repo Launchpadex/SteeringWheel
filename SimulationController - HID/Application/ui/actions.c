@@ -60,6 +60,8 @@ typedef struct {
 static const SettingDef g_settings[] = {
     { "Brightness",       offsetof(SystemSettings, brightness),         0,   100   },
     { "Sampling Freq",    offsetof(SystemSettings, frequency),           10,  1000  },
+    { "Degrees of Rot",   offsetof(SystemSettings, degrees_of_rotation), 90,  1800  },
+    { "Wheel PPR",        offsetof(SystemSettings, wheel_ppr),           100, 50000 },
     { "FFB Enable",       offsetof(SystemSettings, ffb),                0,   1     },
     { "FFB Gain %",       offsetof(SystemSettings, ffb_gain),           0,   200   },
     { "Max Current mA",   offsetof(SystemSettings, ffb_max_current_mA), 0,   30000 },
@@ -124,7 +126,7 @@ void action_save_settings(lv_event_t *e) {
 }
 
 void action_set_wheel_center(lv_event_t *e) {
-    htim4.Instance->CNT = 32000;
+    Inputs_SetWheelCenter();
 }
 
 /*=====================================================================*/

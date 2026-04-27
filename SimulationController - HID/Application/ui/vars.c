@@ -33,32 +33,32 @@ static bool misko_joy_calib = false;
 // =============================================================================
 // ANALOG INPUTS – All now read from the atomic RawInputs snapshot
 // =============================================================================
-int32_t get_var_wheel(void)     { return Inputs_GetLatestSnapshot()->wheel; }
-void    set_var_wheel(int32_t value) { /* not used by hardware – keep empty or remove setter in EEZ */ }
+int32_t get_var_wheel(void)     { return Inputs_GetLatestMapped()->values[AXIS_WHEEL]; }
+void    set_var_wheel(int32_t value) { }
 
-int32_t get_var_throttle(void)  { return Inputs_GetLatestSnapshot()->throttle; }
-void    set_var_throttle(int32_t value) { /* no direct write allowed */ }
+int32_t get_var_throttle(void)  { return Inputs_GetLatestMapped()->values[AXIS_THROTTLE]; }
+void    set_var_throttle(int32_t value) { }
 
-int32_t get_var_brake(void)     { return Inputs_GetLatestSnapshot()->brake; }
-void    set_var_brake(int32_t value)    { /* no direct write allowed */ }
+int32_t get_var_brake(void)     { return Inputs_GetLatestMapped()->values[AXIS_BRAKE]; }
+void    set_var_brake(int32_t value)    { }
 
-int32_t get_var_clutch(void)    { return Inputs_GetLatestSnapshot()->clutch; }
-void    set_var_clutch(int32_t value)   { /* no direct write allowed */ }
+int32_t get_var_clutch(void)    { return Inputs_GetLatestMapped()->values[AXIS_CLUTCH]; }
+void    set_var_clutch(int32_t value)   { }
 
-int32_t get_var_joy_x(void)     { return Inputs_GetLatestSnapshot()->misko_x; }   // Misko joystick X
-void    set_var_joy_x(int32_t value)    { /* no direct write */ }
+int32_t get_var_joy_x(void)     { return Inputs_GetLatestMapped()->values[AXIS_MISKO_X]; }
+void    set_var_joy_x(int32_t value)    { }
 
-int32_t get_var_joy_y(void)     { return Inputs_GetLatestSnapshot()->misko_y; }   // Misko joystick Y
-void    set_var_joy_y(int32_t value)    { /* no direct write */ }
+int32_t get_var_joy_y(void)     { return Inputs_GetLatestMapped()->values[AXIS_MISKO_Y]; }
+void    set_var_joy_y(int32_t value)    { }
 
-int32_t get_var_lh_x(void)       { return Inputs_GetLatestSnapshot()->lh_x; }
-void    set_var_lh_x(int32_t value)     { /* no direct write */ }
+int32_t get_var_lh_x(void)     { return Inputs_GetLatestMapped()->values[AXIS_LH_X]; }
+void    set_var_lh_x(int32_t value)     { }
 
-int32_t get_var_lh_y(void)      { return Inputs_GetLatestSnapshot()->lh_y; }
-void    set_var_lh_y(int32_t value)     { /* no direct write */ }
+int32_t get_var_lh_y(void)     { return Inputs_GetLatestMapped()->values[AXIS_LH_Y]; }
+void    set_var_lh_y(int32_t value)     { }
 
-int32_t get_var_lh_r(void)      { return Inputs_GetLatestSnapshot()->lh_slider; }  // Slider = rotary on left hand
-void    set_var_lh_r(int32_t value)     { /* no direct write */ }
+int32_t get_var_lh_r(void)     { return Inputs_GetLatestMapped()->values[AXIS_LH_SLIDER]; }
+void    set_var_lh_r(int32_t value)     { }
 
 static int32_t bar_midpoint(lv_obj_t *bar) {
     return (lv_bar_get_max_value(bar) + lv_bar_get_min_value(bar)) / 2;
@@ -86,16 +86,6 @@ int32_t get_var_ffb_force_start(void) {
 }
 void    set_var_ffb_force(int32_t v)           { }
 void    set_var_ffb_force_start(int32_t v)     { }
-
-int32_t get_var_wheel_speed(void)          { return bar_pos(objects.status_wheel_speed, FFB_GetLastSpeed()); }
-int32_t get_var_wheel_speed_start(void)    { return bar_midpoint(objects.status_wheel_speed); }
-void    set_var_wheel_speed(int32_t v)         { }
-void    set_var_wheel_speed_start(int32_t v)   { }
-
-int32_t get_var_wheel_accel(void)          { return bar_pos(objects.status_wheel_accel, FFB_GetLastAccel()); }
-int32_t get_var_wheel_accel_start(void)    { return bar_midpoint(objects.status_wheel_accel); }
-void    set_var_wheel_accel(int32_t v)         { }
-void    set_var_wheel_accel_start(int32_t v)   { }
 
 // =============================================================================
 // END OF ANALOG INPUTS

@@ -26,6 +26,7 @@
 #define TLV_TYPE_BRIGHTNESS         0x02
 #define TLV_TYPE_FREQUENCY          0x03
 #define TLV_TYPE_FFB                0x04
+#define TLV_TYPE_DEGREES_OF_ROT     0x05
 #define TLV_TYPE_FFB_GAIN           0x06
 #define TLV_TYPE_FFB_MAX_CURRENT    0x07
 #define TLV_TYPE_FFB_SPD_THRESHOLD  0x08
@@ -36,7 +37,8 @@
 #define TLV_TYPE_FFB_FRICTION_COEF  0x0D
 #define TLV_TYPE_FFB_INERTIA_COEF   0x0E
 #define TLV_TYPE_AXIS_DEADZONE      0x0F
-// Next free ID: 0x10
+#define TLV_TYPE_WHEEL_PPR          0x10
+// Next free ID: 0x11
 
 // Axis calibration defaults
 #define DEFAULT_NUM_AXES            9
@@ -53,6 +55,8 @@ typedef struct {
     // --- scalar settings (must stay int32_t) ---
     int32_t  brightness;
     int32_t  frequency;
+    int32_t  degrees_of_rotation;
+    int32_t  wheel_ppr;   // already includes ×4 (e.g. 600PPR encoder → enter 2400)
     int32_t  ffb;               // 0 = off, 1 = on
     int32_t  ffb_gain;
     int32_t  ffb_max_current_mA;

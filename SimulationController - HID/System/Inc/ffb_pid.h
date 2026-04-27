@@ -34,6 +34,15 @@ typedef struct {
     int32_t filtered_accel;
 } AxisState_t;
 
+typedef struct {
+    uint8_t  state;   /* 0=free, 1=allocated, 2=playing */
+    uint8_t  type;    /* effect type ID (0x01=CF, 0x08=Spring, 0x09=Damper, 0x0A=Inertia, 0x0B=Friction, etc.) */
+    int16_t  force;   /* last computed force contribution from this slot */
+    uint32_t elapsed; /* ms since effect started */
+} FFBEffectDebug_t;
+
+extern FFBEffectDebug_t g_ffb_debug[MAX_EFFECTS + 1]; /* index 0 unused, 1..MAX_EFFECTS */
+
 int32_t FFB_CalculateSpeed(uint8_t axis_id, int32_t current_pos, uint32_t current_time_ms);
 int32_t FFB_CalculateAccel(uint8_t axis_id, int32_t current_speed, uint32_t current_time_ms);
 

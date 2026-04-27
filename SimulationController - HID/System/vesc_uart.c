@@ -16,6 +16,9 @@
 
 static UART_HandleTypeDef *_huart;
 
+static volatile int32_t _pending_current_mA = 0;
+static volatile int      _pending            = 0;
+
 /* ---------------------------------------------------------------------------
  * CRC16 (CCITT)
  * --------------------------------------------------------------------------- */
@@ -98,4 +101,19 @@ void vesc_set_current_brake(float current_amps)
 void vesc_stop(void)
 {
     vesc_set_current(0.0f);
+}
+
+void vesc_queue_current(int32_t current_mA)
+{
+    _pending_current_mA = current_mA;
+    _pending = 1;
+}
+
+void vesc_process_pending(void)
+{
+    if (_pending) {
+        int32_t current = _pending_current_mA;
+        _pending = 0;
+        vesc_set_current(current / 1000.0f);
+    }
 }

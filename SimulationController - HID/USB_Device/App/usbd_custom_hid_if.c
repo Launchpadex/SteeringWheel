@@ -95,7 +95,7 @@ __ALIGN_BEGIN static uint8_t CUSTOM_HID_ReportDesc_FS[USBD_CUSTOM_HID_REPORT_DES
 		  0x05, 0x01,        // USAGE_PAGE (Generic Desktop)
 		  0x09, 0x04,        // USAGE (Joystick)
 		  0xA1, 0x01,        // COLLECTION (Application)
-		  0x85, 0x04,        //   REPORT_ID (04)
+		  0x85, 0x10,        //   REPORT_ID (16) — 0x10 avoids collision with FFB output IDs
 		  0x05, 0x01,        //   USAGE_PAGE (Generic Desktop)
 		  0x09, 0x01,        //   USAGE (Pointer)
 		  0xA1, 0x00,        //   COLLECTION (Physical)
@@ -541,10 +541,10 @@ __ALIGN_BEGIN static uint8_t CUSTOM_HID_ReportDesc_FS[USBD_CUSTOM_HID_REPORT_DES
 		  0x91, 0x02,  //     OUTPUT (Data,Var,Abs)
 		  0xC0,        //   END_COLLECTION
 
-		  // --- Create New Effect (FEATURE, ID 05) ---
+		  // --- Create New Effect (FEATURE, ID 11) ---
 		  0x09, 0xAB,  //   USAGE (Create New Effect Report)
 		  0xA1, 0x02,  //   COLLECTION (Logical)
-		  0x85, 0x05,  //     REPORT_ID (05)
+		  0x85, 0x11,  //     REPORT_ID (11)
 		  0x09, 0x25,  //     USAGE (Effect Type)
 		  0xA1, 0x02,  //     COLLECTION (Logical)
 		  0x09, 0x26,  //       USAGE (ET Constant Force)
@@ -579,11 +579,11 @@ __ALIGN_BEGIN static uint8_t CUSTOM_HID_ReportDesc_FS[USBD_CUSTOM_HID_REPORT_DES
 		  0xB1, 0x01,  //     FEATURE (Cnst,Ary,Abs)
 		  0xC0,        //   END_COLLECTION
 
-		  // --- PID Block Load (FEATURE, ID 06) ---
+		  // --- PID Block Load (FEATURE, ID 12) ---
 		  0x05, 0x0F,  //   USAGE_PAGE (Physical Interface)
 		  0x09, 0x89,  //   USAGE (PID Block Load Report)
 		  0xA1, 0x02,  //   COLLECTION (Logical)
-		  0x85, 0x06,  //     REPORT_ID (06)
+		  0x85, 0x12,  //     REPORT_ID (12)
 		  0x09, 0x22,  //     USAGE (Effect Block Index)
 		  0x15, 0x01,  //     LOGICAL_MINIMUM (1)
 		  0x25, 0x28,  //     LOGICAL_MAXIMUM (40)
@@ -615,10 +615,10 @@ __ALIGN_BEGIN static uint8_t CUSTOM_HID_ReportDesc_FS[USBD_CUSTOM_HID_REPORT_DES
 		  0xB1, 0x00,  //     FEATURE (Data)
 		  0xC0,        //   END_COLLECTION
 
-		  // --- PID Pool (FEATURE, ID 07) ---
+		  // --- PID Pool (FEATURE, ID 13) ---
 		  0x09, 0x7F,  //   USAGE (PID Pool Report)
 		  0xA1, 0x02,  //   COLLECTION (Logical)
-		  0x85, 0x07,  //     REPORT_ID (07)
+		  0x85, 0x13,  //     REPORT_ID (13)
 		  0x09, 0x80,  //     USAGE (RAM Pool Size)
 		  0x75, 0x10,  //     REPORT_SIZE (16)
 		  0x95, 0x01,  //     REPORT_COUNT (1)

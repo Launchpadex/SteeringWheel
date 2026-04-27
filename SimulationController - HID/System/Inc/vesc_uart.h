@@ -22,4 +22,8 @@ void vesc_set_current_brake(float current_amps);
 // Stop motor immediately (sends 0 A)
 void vesc_stop(void);
 
+// Queue current from ISR context — call vesc_process_pending() from main loop
+void vesc_queue_current(int32_t current_mA);
+void vesc_process_pending(void);
+
 #endif // VESC_UART_H

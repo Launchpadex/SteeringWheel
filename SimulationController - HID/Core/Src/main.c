@@ -176,6 +176,7 @@ int main(void)
     /* USER CODE BEGIN 3 */
     lv_timer_handler();
     tick_screen_by_id(SelectedScreen);
+    vesc_process_pending();
   }
 
   /* USER CODE END 3 */
