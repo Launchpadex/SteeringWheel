@@ -60,30 +60,16 @@ void    set_var_lh_y(int32_t value)     { }
 int32_t get_var_lh_r(void)     { return Inputs_GetLatestMapped()->values[AXIS_LH_SLIDER]; }
 void    set_var_lh_r(int32_t value)     { }
 
-static int32_t bar_midpoint(lv_obj_t *bar) {
-    return (lv_bar_get_max_value(bar) + lv_bar_get_min_value(bar)) / 2;
-}
-
-/* Translate signed reading to bar position: midpoint + reading, clamped to bar range. */
-static int32_t bar_pos(lv_obj_t *bar, int32_t reading) {
-    int32_t lo  = lv_bar_get_min_value(bar);
-    int32_t hi  = lv_bar_get_max_value(bar);
-    int64_t pos = (int64_t)bar_midpoint(bar) + reading;
-    if (pos < lo) pos = lo;
-    if (pos > hi) pos = hi;
-    return (int32_t)pos;
-}
-
 int32_t get_var_ffb_force(void) {
-    int32_t mid = bar_midpoint(objects.status_ffb_force);
-    int32_t pos = bar_pos(objects.status_ffb_force, FFB_GetLastForce());
-    return pos > mid ? pos : mid;   /* always the upper bound */
+    int32_t force = FFB_GetLastForce();
+    return force > 0 ? force : 0;
 }
+
 int32_t get_var_ffb_force_start(void) {
-    int32_t mid = bar_midpoint(objects.status_ffb_force);
-    int32_t pos = bar_pos(objects.status_ffb_force, FFB_GetLastForce());
-    return pos < mid ? pos : mid;   /* always the lower bound */
+    int32_t force = FFB_GetLastForce();
+    return force < 0 ? -force : 0;
 }
+
 void    set_var_ffb_force(int32_t v)           { }
 void    set_var_ffb_force_start(int32_t v)     { }
 
