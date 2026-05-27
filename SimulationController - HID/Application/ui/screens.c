@@ -8,8 +8,11 @@
 #include "styles.h"
 #include "ui.h"
 #include "InputCollection.h"
+#include "flash_settings.h"
 
 #include <string.h>
+
+extern SystemSettings system_settings;
 
 objects_t objects;
 lv_obj_t *tick_value_change_obj;
@@ -922,13 +925,12 @@ void create_screen_sensor_status() {
             lv_obj_set_style_text_font(obj, &lv_font_montserrat_8, LV_PART_MAIN | LV_STATE_DEFAULT);
         }
         {
-            // status_ffb_force
+            // status_ffb_force_positive
             lv_obj_t *obj = lv_bar_create(parent_obj);
-            objects.status_ffb_force = obj;
-            lv_obj_set_pos(obj, 170, 66);
-            lv_obj_set_size(obj, 136, 11);
+            objects.status_ffb_force_positive = obj;
+            lv_obj_set_pos(obj, 235, 66);
+            lv_obj_set_size(obj, 67, 11);
             lv_bar_set_range(obj, 0, 65535);
-            lv_bar_set_mode(obj, LV_BAR_MODE_RANGE);
             lv_obj_set_style_bg_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_bg_color(obj, lv_color_hex(0xffff0000), LV_PART_INDICATOR | LV_STATE_DEFAULT);
         }
@@ -938,6 +940,17 @@ void create_screen_sensor_status() {
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_obj_set_style_text_font(obj, &lv_font_montserrat_10, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_label_set_text(obj, "FFB Force");
+        }
+        {
+            // status_ffb_force_negative
+            lv_obj_t *obj = lv_bar_create(parent_obj);
+            objects.status_ffb_force_negative = obj;
+            lv_obj_set_pos(obj, 241, 76);
+            lv_obj_set_size(obj, 67, 11);
+            lv_bar_set_range(obj, 0, 65535);
+            lv_obj_set_style_bg_color(obj, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_transform_rotation(obj, 1800, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_bg_color(obj, lv_color_hex(0xffff0000), LV_PART_INDICATOR | LV_STATE_DEFAULT);
         }
     }
     
@@ -1178,19 +1191,19 @@ void tick_screen_sensor_status() {
     }
     {
         int32_t new_val = get_var_ffb_force();
-        int32_t cur_val = lv_bar_get_value(objects.status_ffb_force);
+        int32_t cur_val = lv_bar_get_value(objects.status_ffb_force_positive);
         if (new_val != cur_val) {
-            tick_value_change_obj = objects.status_ffb_force;
-            lv_bar_set_value(objects.status_ffb_force, new_val, LV_ANIM_OFF);
+            tick_value_change_obj = objects.status_ffb_force_positive;
+            lv_bar_set_value(objects.status_ffb_force_positive, new_val, LV_ANIM_OFF);
             tick_value_change_obj = NULL;
         }
     }
     {
-        int32_t new_val = get_var_ffb_force();
-        int32_t cur_val = lv_bar_get_start_value(objects.status_ffb_force);
+        int32_t new_val = get_var_ffb_force_start();
+        int32_t cur_val = lv_bar_get_value(objects.status_ffb_force_negative);
         if (new_val != cur_val) {
-            tick_value_change_obj = objects.status_ffb_force;
-            lv_bar_set_start_value(objects.status_ffb_force, new_val, LV_ANIM_OFF);
+            tick_value_change_obj = objects.status_ffb_force_negative;
+            lv_bar_set_value(objects.status_ffb_force_negative, new_val, LV_ANIM_OFF);
             tick_value_change_obj = NULL;
         }
     }

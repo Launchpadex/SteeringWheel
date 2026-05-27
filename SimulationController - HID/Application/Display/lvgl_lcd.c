@@ -112,14 +112,6 @@ void update_var_setting_value(int32_t value) {
 void lvgl_ui_init(){
 	set_var_force_feedback_status(system_settings.ffb ? "!FFB ON!" : "FFB OFF");
 	settings_init_display();
-	lv_bar_set_range(objects.status_ffb_force, 0, 2 * system_settings.ffb_max_current_mA);
-	lv_bar_set_range(objects.status_wheel,     system_settings.axis_min[0], system_settings.axis_max[0]);
-	lv_bar_set_range(objects.status_throttle,  system_settings.axis_min[1], system_settings.axis_max[1]);
-	lv_bar_set_range(objects.status_brake,     system_settings.axis_min[2], system_settings.axis_max[2]);
-	lv_bar_set_range(objects.status_clutch,    system_settings.axis_min[3], system_settings.axis_max[3]);
-	lv_bar_set_range(objects.status_lh_x,      system_settings.axis_min[4], system_settings.axis_max[4]);
-	lv_bar_set_range(objects.status_lh_y,      system_settings.axis_min[5], system_settings.axis_max[5]);
-	lv_bar_set_range(objects.status_lh_slider, system_settings.axis_min[6], system_settings.axis_max[6]);
-	lv_bar_set_range(objects.status_misko_x,   system_settings.axis_min[7], system_settings.axis_max[7]);
-	lv_bar_set_range(objects.status_misko_y,   system_settings.axis_min[8], system_settings.axis_max[8]);
+	lv_bar_set_range(objects.status_ffb_force_positive, 0, system_settings.ffb_max_current_mA);
+	lv_bar_set_range(objects.status_ffb_force_negative, 0, system_settings.ffb_max_current_mA);
 }

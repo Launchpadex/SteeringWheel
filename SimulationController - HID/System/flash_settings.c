@@ -36,6 +36,7 @@ static const SettingEntry scalar_settings[] = {
     SETTING(TLV_TYPE_FFB,               ffb,                 0),
     SETTING(TLV_TYPE_FFB_GAIN,          ffb_gain,            100),
     SETTING(TLV_TYPE_FFB_MAX_CURRENT,   ffb_max_current_mA,  15000),
+    SETTING(TLV_TYPE_FFB_CURRENT_THRESHOLD, ffb_current_threshold, 50),
     SETTING(TLV_TYPE_FFB_SPD_THRESHOLD, ffb_spd_threshold,   10),
     SETTING(TLV_TYPE_FFB_ACL_THRESHOLD, ffb_acl_threshold,   5),
     SETTING(TLV_TYPE_FFB_FRC_THRESHOLD, ffb_frc_threshold,   20),

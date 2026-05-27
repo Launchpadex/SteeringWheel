@@ -86,10 +86,12 @@ static AxisState_t gAxisStates[MAX_AXES] = {0};
 static int32_t g_last_speed = 0;
 static int32_t g_last_accel = 0;
 static int32_t g_last_force = 0;
+static int32_t g_ffb_soft_limit_force = 0;
 
 int32_t FFB_GetLastSpeed(void) { return g_last_speed; }
 int32_t FFB_GetLastAccel(void) { return g_last_accel; }
 int32_t FFB_GetLastForce(void) { return g_last_force; }
+int32_t FFB_GetLastSoftLimitForce(void) { return g_ffb_soft_limit_force; }
 
 /* ------------------------------------------------------------------ */
 /* Speed and acceleration calculation functions */
@@ -475,34 +477,43 @@ int32_t FFB_GetForce(int32_t position, int32_t speed, int32_t accel, uint32_t cu
     force = -(force * gDeviceGain / 255);
     force = ConstrainEffect(force);
 
-    //SoftLimits
-    //FFB_CalculateSoftLimitForce(position, system_settings.deg)
-
     /* Scale force to current in mA — int64_t prevents overflow at high currents */
     int32_t current_mA = (int32_t)((int64_t)force * system_settings.ffb_gain * system_settings.ffb_max_current_mA / (32767LL * 100));
+
+    /* Soft limits override game effects — added after gain scaling as hardware protection */
+    g_ffb_soft_limit_force = FFB_CalculateSoftLimitForce(position, system_settings.degrees_of_rotation);
+    current_mA += g_ffb_soft_limit_force;
+
+    /* Deadzone: suppress motor dither at very low force levels */
+    if (labs(current_mA) < system_settings.ffb_current_threshold) {
+        current_mA = 0;
+    }
 
     g_last_force = current_mA;
     return current_mA;
 }
 
-int32_t FFB_CalculateSoftLimitForce(uint16_t position, uint16_t soft_limit_zone){
-	int32_t max_force = system_settings.ffb_max_current_mA;
-	//TODO: Implement degrees_of_rotation
+int32_t FFB_CalculateSoftLimitForce(uint16_t position, uint16_t deg_of_rot)
+{
+    if (deg_of_rot == 0) return 0;
 
-	//Left SoftLimit
-	if (position < soft_limit_zone){
-		uint16_t overshoot = soft_limit_zone - position;
-		return (int32_t)max_force * overshoot / soft_limit_zone;
-	}
+    const int32_t soft_limit_zone_deg = 5;
+    int32_t max_force = system_settings.ffb_max_current_mA;
+    int32_t soft_limit_zone = (int32_t)UINT16_MAX * soft_limit_zone_deg / deg_of_rot;
 
-	//Right SoftLimit
-	if (position > UINT16_MAX - soft_limit_zone){
-		uint16_t overshoot = position - (UINT16_MAX - soft_limit_zone);
-		return -(int32_t)max_force * overshoot / soft_limit_zone;
-	}
+    if (position < soft_limit_zone) {
+        int32_t overshoot = soft_limit_zone - position;
+        return max_force * overshoot / soft_limit_zone;
+    }
 
-	return 0; // No force in normal zone
+    if (position > UINT16_MAX - soft_limit_zone) {
+        int32_t overshoot = position - (UINT16_MAX - soft_limit_zone);
+        return -(max_force * overshoot / soft_limit_zone);
+    }
+
+    return 0;
 }
+
 
 /* ------------------------------------------------------------------ */
 /*  Set Motor Current */

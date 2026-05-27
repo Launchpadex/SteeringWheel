@@ -38,7 +38,8 @@
 #define TLV_TYPE_FFB_INERTIA_COEF   0x0E
 #define TLV_TYPE_AXIS_DEADZONE      0x0F
 #define TLV_TYPE_WHEEL_PPR          0x10
-// Next free ID: 0x11
+#define TLV_TYPE_FFB_CURRENT_THRESHOLD  0x11
+// Next free ID: 0x12
 
 // Axis calibration defaults
 #define DEFAULT_NUM_AXES            9
@@ -60,6 +61,7 @@ typedef struct {
     int32_t  ffb;               // 0 = off, 1 = on
     int32_t  ffb_gain;
     int32_t  ffb_max_current_mA;
+    int32_t  ffb_current_threshold;
     int32_t  ffb_spd_threshold;
     int32_t  ffb_acl_threshold;
     int32_t  ffb_frc_threshold;

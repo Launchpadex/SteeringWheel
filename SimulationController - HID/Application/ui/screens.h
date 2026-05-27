@@ -56,7 +56,8 @@ typedef struct _objects_t {
     lv_obj_t *status_lh_x;
     lv_obj_t *status_lh_y;
     lv_obj_t *status_lh_slider;
-    lv_obj_t *status_ffb_force;
+    lv_obj_t *status_ffb_force_positive;
+    lv_obj_t *status_ffb_force_negative;
     lv_obj_t *calibration_status_calibration;
     lv_obj_t *obj21;
     lv_obj_t *obj22;

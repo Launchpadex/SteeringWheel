@@ -65,6 +65,7 @@ static const SettingDef g_settings[] = {
     { "FFB Enable",       offsetof(SystemSettings, ffb),                0,   1     },
     { "FFB Gain %",       offsetof(SystemSettings, ffb_gain),           0,   200   },
     { "Max Current mA",   offsetof(SystemSettings, ffb_max_current_mA), 0,   30000 },
+    { "Current Cutoff mA",  offsetof(SystemSettings, ffb_current_threshold), 0,   5000  },
     { "Speed Threshold",  offsetof(SystemSettings, ffb_spd_threshold),  0,   1000  },
     { "Accel Threshold",  offsetof(SystemSettings, ffb_acl_threshold),  0,   1000  },
     { "Friction Thresh",  offsetof(SystemSettings, ffb_frc_threshold),  0,   1000  },

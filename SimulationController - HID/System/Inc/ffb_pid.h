@@ -58,3 +58,5 @@ void    FFB_SetMotorCurrent(int32_t current_mA);
 int32_t FFB_GetLastForce(void);
 int32_t FFB_GetLastSpeed(void);
 int32_t FFB_GetLastAccel(void);
+int32_t FFB_GetLastSoftLimitForce(void);
+int32_t FFB_CalculateSoftLimitForce(uint16_t position, uint16_t deg_of_rot);
