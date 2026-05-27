@@ -1,0 +1,10 @@
+﻿"Symbol";"Value";"Unit";
+"TraceParts.PartNumber";"10-14012020-090907";"";
+"REFERENCE";"222806-4X10";"";
+"TraceParts.PartTitle";"222806 Metric thread security screw flat head six lobes recess with pin - Stainless steel A2";"";
+"TraceParts.InstanceId";"10-14012020-090907E0GH4DNHC237S7727XCESS294";"";
+"SUPPLIER";"BENE INOX";"";
+"DESIGN";"222806 Metric thread security screw flat head six lobes recess with pin - Stainless steel A2 - 222806-4X10";"";
+"TRACEPARTS";"TRACEPARTS";"";
+"TraceParts.PartLanguage";"en";"";
+"TraceParts.PartVersion";"1.0.8";"";
