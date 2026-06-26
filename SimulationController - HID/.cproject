@@ -57,6 +57,12 @@
 									<listOptionValue builtIn="false" value="../USB_Device/Target"/>
 									<listOptionValue builtIn="false" value="../Middlewares/ST/STM32_USB_Device_Library/Core/Inc"/>
 									<listOptionValue builtIn="false" value="../Middlewares/ST/STM32_USB_Device_Library/Class/CustomHID/Inc"/>
+									<listOptionValue builtIn="false" value="../Composite"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/AL94_USB_Composite/COMPOSITE/Class/COMPOSITE/Inc"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/AL94_USB_Composite/COMPOSITE/Class/HID_CUSTOM/Inc"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/AL94_USB_Composite/COMPOSITE/App"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/AL94_USB_Composite/COMPOSITE/Core/Inc"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/AL94_USB_Composite/COMPOSITE/Target"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.730125841" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>

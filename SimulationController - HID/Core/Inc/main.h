@@ -75,8 +75,6 @@ void Error_Handler(void);
 #define LEFT_HAND_JOY_Y_GPIO_Port GPIOF
 #define THROTTLE_Pin GPIO_PIN_0
 #define THROTTLE_GPIO_Port GPIOA
-#define BRAKE_Pin GPIO_PIN_1
-#define BRAKE_GPIO_Port GPIOA
 #define CLUTCH_Pin GPIO_PIN_2
 #define CLUTCH_GPIO_Port GPIOA
 #define LEFT_HAND_JOY_X_Pin GPIO_PIN_4

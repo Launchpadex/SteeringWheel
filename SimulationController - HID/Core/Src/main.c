@@ -20,6 +20,7 @@
 #include "main.h"
 #include "adc.h"
 #include "dma.h"
+#include "i2c.h"
 #include "quadspi.h"
 #include "spi.h"
 #include "tim.h"
@@ -73,8 +74,17 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
     static RawInputs  raw    = {0};
     static MappedAxes mapped = {0};
+    static uint32_t   brake_div = 0;
 
     uint32_t now = HAL_GetTick();
+
+    /* Update brake cache at NAU7802 rate, independently of main sample rate.
+       At 1000 Hz main rate and 80 SPS NAU7802: update every 13 ticks (~77 Hz margin). */
+    if (++brake_div >= (system_settings.frequency / 320))
+    {
+        brake_div = 0;
+        Inputs_UpdateBrake();
+    }
 
     Inputs_CollectAll(&raw);
     Inputs_MapAxes(&raw, &mapped);
@@ -135,6 +145,7 @@ int main(void)
   MX_QUADSPI1_Init();
   MX_USB_Device_Init();
   MX_USART2_UART_Init();
+  MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
 
   //Init VESC
@@ -233,7 +244,6 @@ int _write(int file, char *ptr, int len)
 {
   (void)file;
   int DataIdx;
-
   for (DataIdx = 0; DataIdx < len; DataIdx++)
   {
     ITM_SendChar(*ptr++);

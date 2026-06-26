@@ -48,8 +48,8 @@
 
 // All persistent state — every scalar field must be int32_t for table-driven I/O
 typedef struct {
-    uint16_t axis_min[MAX_AXES];
-    uint16_t axis_max[MAX_AXES];
+    int32_t  axis_min[MAX_AXES];
+    int32_t  axis_max[MAX_AXES];
     int32_t  axis_deadzone[MAX_AXES];   /* 0 = use global deadzone */
     uint8_t  num_axes;
     uint8_t  valid;

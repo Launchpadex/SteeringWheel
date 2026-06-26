@@ -8,6 +8,7 @@
 
 extern TIM_HandleTypeDef htim2, htim4;
 extern ADC_HandleTypeDef hadc1, hadc2, hadc4;
+extern I2C_HandleTypeDef hi2c2;
 extern USBD_HandleTypeDef hUsbDeviceFS;
 extern SystemSettings system_settings;
 
@@ -21,6 +22,7 @@ static CalibrationState g_calibration = {0};
 static RawInputs  g_latest_inputs  = {0};
 static MappedAxes g_latest_mapped  = {0};
 static uint16_t g_wheel_center = 0;
+static int32_t  g_brake_cached = 0;   /* updated independently of main sample rate */
 hid1_report_t hid1_rep = {};
 uint16_t g_wheel_pos_raw    = 0;
 uint16_t g_wheel_pos_mapped = 0;
@@ -36,7 +38,18 @@ void Inputs_Init(void)
     HAL_ADC_Start_DMA(&hadc2, (uint32_t*)adc2_values, ADC2_BUFFERSIZE);
     HAL_ADC_Start_DMA(&hadc4, (uint32_t*)adc4_values, ADC4_BUFFERSIZE);
 
+    volatile bool nau_ok = NAU7802_Init(&hi2c2, NAU7802_GAIN_128, NAU7802_SPS_320);
+    NAU7802_Tare(&hi2c2);
+
     Inputs_SetWheelCenter();
+}
+
+/* Call from a lower-rate timer (≤ NAU7802 sample rate). */
+void Inputs_UpdateBrake(void)
+{
+	volatile bool ready = NAU7802_IsDataReady(&hi2c2);
+	if (ready)
+	    g_brake_cached = NAU7802_ReadTared(&hi2c2);
 }
 
 /*=====================================================================*/
@@ -68,8 +81,8 @@ void Inputs_CollectAll(RawInputs *out)
     temp.wheel = (uint16_t)__HAL_TIM_GET_COUNTER(&htim4);
     g_wheel_pos_raw = temp.wheel;
     temp.throttle   = adc1_values[0];
-    temp.brake      = adc1_values[1];
-    temp.clutch     = adc1_values[2];
+    temp.clutch     = adc1_values[1];
+    temp.brake = g_brake_cached;
     temp.lh_x       = adc2_values[0];
     temp.lh_y       = adc2_values[1];
     temp.lh_slider  = adc2_values[2];
@@ -89,7 +102,7 @@ void Inputs_MapAxes(const RawInputs *raw, MappedAxes *mapped)
     if (!raw || !mapped)
         return;
 
-    const uint16_t r[MAX_AXES] = {
+    const int32_t r[MAX_AXES] = {
         raw->wheel,
         raw->throttle,
         raw->brake,
@@ -103,7 +116,7 @@ void Inputs_MapAxes(const RawInputs *raw, MappedAxes *mapped)
 
     for (int i = 0; i < MAX_AXES; ++i)
     {
-        uint32_t raw_val = r[i];
+        int32_t raw_val = r[i];
         int32_t output;
 
         if (i == AXIS_WHEEL) {
@@ -117,17 +130,18 @@ void Inputs_MapAxes(const RawInputs *raw, MappedAxes *mapped)
             else
                 output = (int32_t)((int64_t)pos_from_min * 65534LL / (2 * half));
         } else {
-            uint32_t min   = system_settings.axis_min[i];
-            uint32_t max   = system_settings.axis_max[i];
-            uint32_t range = max - min;
-            if (raw_val <= min)
+            int32_t min   = system_settings.axis_min[i];
+            int32_t max   = system_settings.axis_max[i];
+            int32_t sval  = (int32_t)raw_val;
+            int32_t range = max - min;
+            if (sval <= min)
                 output = 0;
-            else if (raw_val >= max)
+            else if (sval >= max)
                 output = 65534;
-            else if (range == 0)
+            else if (range <= 0)
                 output = 0;
             else
-                output = (int32_t)((uint64_t)(raw_val - min) * 65534ULL / range);
+                output = (int32_t)((int64_t)(sval - min) * 65534LL / range);
         }
 
         if (system_settings.axis_deadzone[i] > 0) {
@@ -179,7 +193,7 @@ static void calibration_timer_cb(lv_timer_t *t)
     RawInputs raw;
     Inputs_CollectAll(&raw);
 
-    const uint16_t v[MAX_AXES] = {
+    const int32_t v[MAX_AXES] = {
         raw.wheel, raw.throttle, raw.brake, raw.clutch,
         raw.lh_x, raw.lh_y, raw.lh_slider,
         raw.misko_x, raw.misko_y
@@ -188,16 +202,16 @@ static void calibration_timer_cb(lv_timer_t *t)
     char buf[400] = "Live values:\n";
     for (size_t i = 0; i < st->num_axes; i++) {
         uint32_t axis = st->axes_to_calibrate[i];
-        uint16_t val = v[axis];
+        int32_t val = v[axis];
 
-        if (val < (uint16_t)system_settings.axis_min[axis])
+        if (val < system_settings.axis_min[axis])
             system_settings.axis_min[axis] = val;
-        if (val > (uint16_t)system_settings.axis_max[axis])
+        if (val > system_settings.axis_max[axis])
             system_settings.axis_max[axis] = val;
 
         char line[64];
-        snprintf(line, sizeof(line), "A%d: %5d - %5d\n",
-                 (int)axis, system_settings.axis_min[axis], system_settings.axis_max[axis]);
+        snprintf(line, sizeof(line), "A%d: %5ld - %5ld\n",
+                 (int)axis, (long)system_settings.axis_min[axis], (long)system_settings.axis_max[axis]);
         strncat(buf, line, sizeof(buf)-strlen(buf)-1);
     }
 
@@ -243,8 +257,8 @@ void Inputs_StartCalibration(void)
     // Reset min/max to extreme values
     for (size_t i = 0; i < g_calibration.num_axes; i++) {
         uint32_t a = g_calibration.axes_to_calibrate[i];
-        system_settings.axis_min[a] = 65535;
-        system_settings.axis_max[a] = 0;
+        system_settings.axis_min[a] = INT32_MAX;
+        system_settings.axis_max[a] = INT32_MIN;
     }
 
     g_calibration.timer = lv_timer_create(calibration_timer_cb, 50, &g_calibration);
