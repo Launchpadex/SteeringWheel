@@ -23,6 +23,11 @@ static RawInputs  g_latest_inputs  = {0};
 static MappedAxes g_latest_mapped  = {0};
 static uint16_t g_wheel_center = 0;
 static int32_t  g_brake_cached = 0;   /* updated independently of main sample rate */
+
+#define NUM_BUTTONS     15
+#define DEBOUNCE_TICKS  5
+static uint8_t  btn_count[NUM_BUTTONS] = {0};
+static uint32_t btn_state = 0;
 hid1_report_t hid1_rep = {};
 uint16_t g_wheel_pos_raw    = 0;
 uint16_t g_wheel_pos_mapped = 0;
@@ -59,23 +64,35 @@ void Inputs_CollectAll(RawInputs *out)
 
     RawInputs temp = {0}; // Initialize all to zero
 
-    // Map buttons with explicit bit positions
-    temp.buttons = 0;
-    temp.buttons |= (!HAL_GPIO_ReadPin(MiskoJOY_BTN_GPIO_Port,      MiskoJOY_BTN_Pin))      ? (1UL << 0) : 0;
-    temp.buttons |= (!HAL_GPIO_ReadPin(BTN_ESC_GPIO_Port,           BTN_ESC_Pin))           ? (1UL << 1) : 0;
-    temp.buttons |= (!HAL_GPIO_ReadPin(BTN_OK_GPIO_Port,            BTN_OK_Pin))            ? (1UL << 2) : 0;
-    temp.buttons |= (!HAL_GPIO_ReadPin(BTN_UP_GPIO_Port,            BTN_UP_Pin))            ? (1UL << 3) : 0;
-    temp.buttons |= (!HAL_GPIO_ReadPin(BTN_LEFT_GPIO_Port,          BTN_LEFT_Pin))          ? (1UL << 4) : 0;
-    temp.buttons |= (!HAL_GPIO_ReadPin(BTN_RIGHT_GPIO_Port,         BTN_RIGHT_Pin))         ? (1UL << 5) : 0;
-    temp.buttons |= (!HAL_GPIO_ReadPin(BTN_DOWN_GPIO_Port,          BTN_DOWN_Pin))          ? (1UL << 6) : 0;
-    temp.buttons |= (!HAL_GPIO_ReadPin(LEFT_HAND_JOY_BTN1_GPIO_Port,LEFT_HAND_JOY_BTN1_Pin))? (1UL << 7) : 0;
-    temp.buttons |= (!HAL_GPIO_ReadPin(LEFT_HAND_JOY_BTN2_GPIO_Port,LEFT_HAND_JOY_BTN2_Pin))? (1UL << 8) : 0;
-    temp.buttons |= (!HAL_GPIO_ReadPin(BASE_BTN1_GPIO_Port,         BASE_BTN1_Pin))         ? (1UL << 9) : 0;
-    temp.buttons |= (!HAL_GPIO_ReadPin(BASE_BTN2_GPIO_Port,         BASE_BTN2_Pin))         ? (1UL << 10) : 0;
-    temp.buttons |= (!HAL_GPIO_ReadPin(BASE_BTN3_GPIO_Port,         BASE_BTN3_Pin))         ? (1UL << 11) : 0;
-    temp.buttons |= (!HAL_GPIO_ReadPin(BASE_BTN4_GPIO_Port,         BASE_BTN4_Pin))         ? (1UL << 12) : 0;
-    temp.buttons |= (!HAL_GPIO_ReadPin(WHEEL_GEAR_L_GPIO_Port,      WHEEL_GEAR_L_Pin))      ? (1UL << 13) : 0;
-    temp.buttons |= (!HAL_GPIO_ReadPin(WHEEL_GEAR_R_GPIO_Port,      WHEEL_GEAR_R_Pin))      ? (1UL << 14) : 0;
+    // Read raw button states (active-low)
+    uint32_t raw_btns = 0;
+    raw_btns |= (!HAL_GPIO_ReadPin(MiskoJOY_BTN_GPIO_Port,      MiskoJOY_BTN_Pin))      ? (1UL << 0) : 0;
+    raw_btns |= (!HAL_GPIO_ReadPin(BTN_ESC_GPIO_Port,           BTN_ESC_Pin))           ? (1UL << 1) : 0;
+    raw_btns |= (!HAL_GPIO_ReadPin(BTN_OK_GPIO_Port,            BTN_OK_Pin))            ? (1UL << 2) : 0;
+    raw_btns |= (!HAL_GPIO_ReadPin(BTN_UP_GPIO_Port,            BTN_UP_Pin))            ? (1UL << 3) : 0;
+    raw_btns |= (!HAL_GPIO_ReadPin(BTN_LEFT_GPIO_Port,          BTN_LEFT_Pin))          ? (1UL << 4) : 0;
+    raw_btns |= (!HAL_GPIO_ReadPin(BTN_RIGHT_GPIO_Port,         BTN_RIGHT_Pin))         ? (1UL << 5) : 0;
+    raw_btns |= (!HAL_GPIO_ReadPin(BTN_DOWN_GPIO_Port,          BTN_DOWN_Pin))          ? (1UL << 6) : 0;
+    raw_btns |= (!HAL_GPIO_ReadPin(LEFT_HAND_JOY_BTN1_GPIO_Port,LEFT_HAND_JOY_BTN1_Pin))? (1UL << 7) : 0;
+    raw_btns |= (!HAL_GPIO_ReadPin(LEFT_HAND_JOY_BTN2_GPIO_Port,LEFT_HAND_JOY_BTN2_Pin))? (1UL << 8) : 0;
+    raw_btns |= (!HAL_GPIO_ReadPin(BASE_BTN1_GPIO_Port,         BASE_BTN1_Pin))         ? (1UL << 9) : 0;
+    raw_btns |= (!HAL_GPIO_ReadPin(BASE_BTN2_GPIO_Port,         BASE_BTN2_Pin))         ? (1UL << 10) : 0;
+    raw_btns |= (!HAL_GPIO_ReadPin(BASE_BTN3_GPIO_Port,         BASE_BTN3_Pin))         ? (1UL << 11) : 0;
+    raw_btns |= (!HAL_GPIO_ReadPin(BASE_BTN4_GPIO_Port,         BASE_BTN4_Pin))         ? (1UL << 12) : 0;
+    raw_btns |= (!HAL_GPIO_ReadPin(WHEEL_GEAR_L_GPIO_Port,      WHEEL_GEAR_L_Pin))      ? (1UL << 13) : 0;
+    raw_btns |= (!HAL_GPIO_ReadPin(WHEEL_GEAR_R_GPIO_Port,      WHEEL_GEAR_R_Pin))      ? (1UL << 14) : 0;
+
+    // Debounce: require DEBOUNCE_TICKS consecutive samples before registering change
+    for (int i = 0; i < NUM_BUTTONS; i++) {
+        if ((raw_btns >> i) & 1) {
+            if (btn_count[i] < DEBOUNCE_TICKS) btn_count[i]++;
+            if (btn_count[i] == DEBOUNCE_TICKS) btn_state |= (1UL << i);
+        } else {
+            btn_count[i] = 0;
+            btn_state &= ~(1UL << i);
+        }
+    }
+    temp.buttons = btn_state;
 
     // Read analog values
     temp.wheel = (uint16_t)__HAL_TIM_GET_COUNTER(&htim4);
@@ -145,11 +162,27 @@ void Inputs_MapAxes(const RawInputs *raw, MappedAxes *mapped)
         }
 
         if (system_settings.axis_deadzone[i] > 0) {
-            uint16_t half_dz = (uint16_t)(system_settings.axis_deadzone[i] / 2);
-            uint16_t dz_low  = (uint16_t)INT16_MAX - half_dz;
-            uint16_t dz_high = (uint16_t)INT16_MAX + half_dz;
-            if (output >= dz_low && output <= dz_high)
-                output = INT16_MAX;
+            int32_t dz = system_settings.axis_deadzone[i];
+            bool centered = (i == AXIS_WHEEL || i == AXIS_LH_X || i == AXIS_LH_Y ||
+                             i == AXIS_MISKO_X || i == AXIS_MISKO_Y);
+            if (centered) {
+                /* Center deadzone: dz=200 → ±100 around 32767 snaps to 32767 */
+                int32_t half_dz = dz / 2;
+                int32_t lo = 32767 - half_dz;
+                int32_t hi = 32767 + half_dz;
+                if (output <= lo)
+                    output = (int32_t)((int64_t)output * 32767LL / lo);
+                else if (output >= hi)
+                    output = 32767 + (int32_t)((int64_t)(output - hi) * 32767LL / (65534 - hi));
+                else
+                    output = 32767;
+            } else {
+                /* Floor deadzone: values 0..dz snap to 0, rest rescaled */
+                if (output <= dz)
+                    output = 0;
+                else
+                    output = (int32_t)((int64_t)(output - dz) * 65534LL / (65534 - dz));
+            }
         }
 
         mapped->values[i] = (uint16_t)output;
