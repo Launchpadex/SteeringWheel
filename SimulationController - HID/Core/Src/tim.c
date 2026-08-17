@@ -148,7 +148,7 @@ void MX_TIM4_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN TIM4_Init 2 */
-  __HAL_TIM_SET_COUNTER(&htim4, 32000);
+  __HAL_TIM_SET_COUNTER(&htim4, 32767);
   /* USER CODE END TIM4_Init 2 */
 
 }
